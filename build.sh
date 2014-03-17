@@ -179,6 +179,7 @@ rm -fr vendor/zte/
 rm -rf .repo/manifests*
 rm -f .repo/local_manifests/dyn-*.xml
 rm -f .repo/local_manifest.xml
+
 repo init -u $SYNC_PROTO://github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
 check_result "repo init failed."
 if [ ! -z "$CHERRYPICK_REV" ]
@@ -205,9 +206,15 @@ fi
 
 mkdir -p .repo/local_manifests
 rm -f .repo/local_manifest.xml
+rm -rf $WORKSPACE/$REPO_BRANCH/build_env
 
 echo Core Manifest:
 cat .repo/manifest.xml
+git clone git@bitbucket.org:omniarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
+if [ -f $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh ]
+then
+  sh $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
+fi
 
 echo Syncing...
 # if sync fails:
@@ -280,6 +287,7 @@ then
   export CM_EXPERIMENTAL=true
 fi
 
+export SIGN_BUILD=true
 
 if [ ! -z "$GERRIT_CHANGE_NUMBER" ]
 then
@@ -386,11 +394,68 @@ then
   fi
 fi
 
-# /archive
-for f in $(ls $OUT/cm-*.zip*)
+## Test file name conflict, download.androidarmv6.org
+DOWNLOAD_ANDROIDARMV6_ORG_BASE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds
+CM_ZIP=
+for f in $(ls $OUT/cm-*.zip)
 do
-  ln $f $WORKSPACE/archive/$(basename $f)
+  CM_ZIP=$(basename $f)
 done
+if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
+then
+    echo "File $CM_ZIP exists on download.androidarmv6.org"
+    echo "Only 1 build is allowed for 1 device on 1 day"
+    make clobber >/dev/null
+    rm -fr $OUT
+    exit 1
+fi
+
+if [ "$SIGN_BUILD" = "true" ]
+then
+  MODVERSION=$(cat $OUT/system/build.prop | grep ro.cm.version | cut -d = -f 2)
+  if [ ! -z "$MODVERSION" -a -f $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip ]
+  then
+    if [ -s $OUT/ota_script_path ]
+    then
+        OTASCRIPT=$(cat $OUT/ota_script_path)
+    else
+        OTASCRIPT=./build/tools/releasetools/ota_from_target_files
+    fi
+    if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
+    then
+        OTASCRIPT="$OTASCRIPT --backup=true"
+    fi
+    if [ -s $OUT/ota_override_device ]
+    then
+        OTASCRIPT="$OTASCRIPT --override_device=$(cat $OUT/ota_override_device)"
+    fi
+    if [ -s $OUT/ota_extras_file ]
+    then
+        OTASCRIPT="$OTASCRIPT --extras_file=$(cat $OUT/ota_extras_file)"
+    fi
+    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d build_env/keys $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-signed.zip
+    md5sum $WORKSPACE/archive/cm-$MODVERSION-signed.zip > $WORKSPACE/archive/cm-$MODVERSION-signed.zip.md5sum
+    if [ "$FASTBOOT_IMAGES" = "true" ]
+    then
+       ./build/tools/releasetools/img_from_target_files $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip
+       md5sum $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip > $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip.md5sum
+    fi
+    rm -f $OUT/ota_script_path $OUT/ota_override_device
+  else
+    echo "Unable to find target files to sign"
+    exit 1
+  fi
+else
+  # /archive
+  mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+  for f in $(ls $OUT/cm-*.zip)
+  do
+    ln $f $WORKSPACE/archive/$(basename $f)
+    cp $f $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+  done
+fi
+
 if [ -f $OUT/utilties/update.zip ]
 then
   cp $OUT/utilties/update.zip $WORKSPACE/archive/recovery.zip
