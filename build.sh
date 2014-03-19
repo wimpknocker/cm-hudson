@@ -396,19 +396,7 @@ fi
 
 ## Test file name conflict, download.androidarmv6.org
 DOWNLOAD_ANDROIDARMV6_ORG_BASE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds
-CM_ZIP=
-for f in $(ls $OUT/cm-*.zip)
-do
-  CM_ZIP=$(basename $f)
-done
-if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
-then
-    echo "File $CM_ZIP exists on download.androidarmv6.org"
-    echo "Only 1 build is allowed for 1 device on 1 day"
-    make clobber >/dev/null
-    rm -fr $OUT
-    exit 1
-fi
+mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_BASE
 
 if [ "$SIGN_BUILD" = "true" ]
 then
@@ -441,14 +429,46 @@ then
        ./build/tools/releasetools/img_from_target_files $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip
        md5sum $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip > $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip.md5sum
     fi
-    rm -f $OUT/ota_script_path $OUT/ota_override_device
+    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
+    # file name conflict
+    CM_ZIP=
+    for f in $(ls $WORKSPACE/archive/cm-*.zip)
+    do
+      CM_ZIP=$(basename $f)
+    done
+    if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
+    then
+      echo "File $CM_ZIP exists on download.androidarmv6.org"
+      echo "Only 1 build is allowed for 1 device on 1 day"
+      make clobber >/dev/null
+      rm -fr $OUT
+      exit 1
+    fi
+    # /archive
+    for f in $(ls $WORKSPACE/archive/cm-*.zip)
+    do
+      cp $f $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+    done
   else
     echo "Unable to find target files to sign"
     exit 1
   fi
 else
+  # file name conflict
+  CM_ZIP=
+  for f in $(ls $OUT/cm-*.zip)
+  do
+    CM_ZIP=$(basename $f)
+  done
+  if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
+  then
+    echo "File $CM_ZIP exists on download.androidarmv6.org"
+    echo "Only 1 build is allowed for 1 device on 1 day"
+    make clobber >/dev/null
+    rm -fr $OUT
+    exit 1
+  fi
   # /archive
-  mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_BASE
   for f in $(ls $OUT/cm-*.zip)
   do
     ln $f $WORKSPACE/archive/$(basename $f)
