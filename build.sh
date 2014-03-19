@@ -182,8 +182,14 @@ rm -rf .repo/manifests*
 rm -f .repo/local_manifests/dyn-*.xml
 rm -f .repo/local_manifest.xml
 
-repo init -u $SYNC_PROTO://github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
+if [[ "$SYNC_PROTO" == "ssh" ]]
+then
+  repo init -u ssh://git@github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
+else
+  repo init -u $SYNC_PROTO://github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
+fi
 check_result "repo init failed."
+
 if [ ! -z "$CHERRYPICK_REV" ]
 then
   cd .repo/manifests
