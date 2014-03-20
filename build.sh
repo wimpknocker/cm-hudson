@@ -86,6 +86,8 @@ then
   exit 1
 fi
 
+DEVICE=$(echo $LUNCH | sed s#cm_##g | sed s#-userdebug##g | sed s#-eng##g)
+
 if [ -z "$CLEAN" ]
 then
   echo CLEAN not specified
@@ -395,8 +397,8 @@ then
 fi
 
 ## Test file name conflict, download.androidarmv6.org
-DOWNLOAD_ANDROIDARMV6_ORG_BASE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds
-mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
+mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
 
 if [ "$SIGN_BUILD" = "true" ]
 then
@@ -436,7 +438,7 @@ then
     do
       CM_ZIP=$(basename $f)
     done
-    if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
+    if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/$CM_ZIP ]
     then
       echo "File $CM_ZIP exists on download.androidarmv6.org"
       echo "Only 1 build is allowed for 1 device on 1 day"
@@ -447,7 +449,7 @@ then
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
     do
-      cp $f $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+      cp $f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
     done
   else
     echo "Unable to find target files to sign"
@@ -460,7 +462,7 @@ else
   do
     CM_ZIP=$(basename $f)
   done
-  if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_BASE/$CM_ZIP ]
+  if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/$CM_ZIP ]
   then
     echo "File $CM_ZIP exists on download.androidarmv6.org"
     echo "Only 1 build is allowed for 1 device on 1 day"
@@ -472,7 +474,7 @@ else
   for f in $(ls $OUT/cm-*.zip)
   do
     ln $f $WORKSPACE/archive/$(basename $f)
-    cp $f $DOWNLOAD_ANDROIDARMV6_ORG_BASE
+    cp $f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
   done
 fi
 
