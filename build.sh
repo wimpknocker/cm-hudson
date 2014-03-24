@@ -215,7 +215,7 @@ cat .repo/manifest.xml
 git clone git@bitbucket.org:omniarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
 if [ -f $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh ]
 then
-  sh $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
+  . $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
 fi
 
 echo Syncing...
