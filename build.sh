@@ -455,7 +455,7 @@ then
     fi
 
     # incremental
-    FILE_MATCH_intermediates=cm_*.zip
+    FILE_MATCH_intermediates=*.zip
     FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
     if [ "$FILE_LAST_intermediates" != "" ]; then
       OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
@@ -464,7 +464,7 @@ then
     fi
     rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*
     mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
-    cp $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip
+    cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
     echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
 
     rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
