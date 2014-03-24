@@ -397,8 +397,15 @@ then
 fi
 
 ## Test file name conflict, download.androidarmv6.org
+getFileName() {
+	echo ${1##*/}
+}
 DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
+DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
+DOWNLOAD_ANDROIDARMV6_ORG_LAST=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_last/$DEVICE
 mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
+mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS
+mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
 
 if [ "$SIGN_BUILD" = "true" ]
 then
@@ -431,7 +438,7 @@ then
        ./build/tools/releasetools/img_from_target_files $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip
        md5sum $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip > $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip.md5sum
     fi
-    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
+
     # file name conflict
     CM_ZIP=
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
@@ -446,6 +453,22 @@ then
       rm -fr $OUT
       exit 1
     fi
+
+    # incremental
+    FILE_MATCH_intermediates=cm_*.zip
+    FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
+    if [ "$FILE_LAST_intermediates" != "" ]; then
+      OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
+      LAST_BUILD_NUMBER=$(cat $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber)
+      $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+    fi
+    rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*
+    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
+    cp $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip
+    echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
+
+    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
+
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
     do
