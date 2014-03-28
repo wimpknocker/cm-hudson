@@ -212,7 +212,7 @@ rm -rf $WORKSPACE/$REPO_BRANCH/build_env
 
 echo Core Manifest:
 cat .repo/manifest.xml
-git clone git@bitbucket.org:omniarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
+git clone git@github.com:androidarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
 if [ -f $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh ]
 then
   . $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
