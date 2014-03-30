@@ -465,6 +465,7 @@ then
       OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
       LAST_BUILD_NUMBER=$(cat $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber)
       $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      md5sum $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
     fi
     rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*
     mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
@@ -474,7 +475,7 @@ then
     rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
 
     # /archive
-    for f in $(ls $WORKSPACE/archive/cm-*.zip)
+    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
     do
       cp $f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
     done
