@@ -464,6 +464,9 @@ then
       exit 1
     fi
 
+    # changelog
+    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/cm-$MODVERSION.txt
+
     # incremental
     FILE_MATCH_intermediates=*.zip
     FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
