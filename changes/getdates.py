@@ -54,7 +54,7 @@ headers['User-Agent'] = 'androidarmv6 changelog builder'
 headers['Accept'] = '*/*'
 headers['Content-Length'] = "%d" % (len(logrequest))
 
-conn = http.client.HTTPConnection('get.cm', 80)
+conn = http.client.HTTPConnection('download.androidarmv6.org', 80)
 conn.connect()
 request = conn.putrequest('POST', '/api')
 
