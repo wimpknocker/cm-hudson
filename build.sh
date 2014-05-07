@@ -406,12 +406,13 @@ fi
 getFileName() {
 	echo ${1##*/}
 }
-DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
-DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
-DOWNLOAD_ANDROIDARMV6_ORG_LAST=/var/lib/jenkins/download_androidarmv6_org/CyanogenModOTA/_last/$DEVICE
+DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=~/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
+DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=~/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
+DOWNLOAD_ANDROIDARMV6_ORG_LAST=~/download_androidarmv6_org/CyanogenModOTA/_last/$DEVICE
 if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
 then
   DOWNLOAD_ANDROIDARMV6_ORG_DEVICE="$DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/stable"
+  DOWNLOAD_ANDROIDARMV6_ORG_LAST="$DOWNLOAD_ANDROIDARMV6_ORG_LAST/stable"
 fi
 mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
 mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS
