@@ -414,6 +414,10 @@ then
   DOWNLOAD_ANDROIDARMV6_ORG_DEVICE="$DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/stable"
   DOWNLOAD_ANDROIDARMV6_ORG_DELTAS="$DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/stable"
   DOWNLOAD_ANDROIDARMV6_ORG_LAST="$DOWNLOAD_ANDROIDARMV6_ORG_LAST/stable"
+else
+  # Remove older nightlies and deltas
+  find $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE -name "cm*NIGHTLY*" -not -path "*/stable/*" -type f -mtime +63 -delete
+  find $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS -name "incremental-*" -not -path "*/stable/*" -type f -mtime +70 -delete
 fi
 mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
 mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS
