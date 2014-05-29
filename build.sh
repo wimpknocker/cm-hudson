@@ -528,6 +528,10 @@ fi
 if [ -f $OUT/recovery.img ]
 then
   cp $OUT/recovery.img $WORKSPACE/archive
+  if [ "$EXPORT_RECOVERY" = "true" ]
+  then
+    cp $OUT/recovery.img $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/recovery-$DEVICE.img
+  fi
 fi
 
 # archive the build.prop as well
