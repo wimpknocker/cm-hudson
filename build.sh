@@ -444,7 +444,11 @@ then
     fi
     if [ -s $OUT/ota_extras_file ]
     then
-        OTASCRIPT="$OTASCRIPT --extras_file=$(cat $OUT/ota_extras_file)"
+        OTASCRIPT="$OTASCRIPT $(cat $OUT/ota_extras_file)"
+    fi
+    if [ -s $OUT/ota_separate_recovery ]
+    then
+        OTASCRIPT="$OTASCRIPT $(cat $OUT/ota_separate_recovery)"
     fi
     ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d build_env/keys $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
     $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
@@ -487,7 +491,7 @@ then
     cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
     echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
 
-    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file
+    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file $OUT/ota_separate_recovery
 
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip*)
