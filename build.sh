@@ -57,7 +57,11 @@ then
   if [[ "$GERRIT_PROJECT" == *kernel* ]]
   then
     vendor_name=$(echo $GERRIT_PROJECT | grep -Po '.*(?<=android_kernel_)[^_]*' | sed -e s#androidarmv6/android_kernel_##g)
-    device_name=msm7x27-common
+    device_name=$(echo $GERRIT_PROJECT | grep '.*android_kernel_[^_]*_' | sed -e s#.*android_kernel_[^_]*_##g | sed s#androidarmv6/##g)
+    if [[ "bcm21553-common" != $device_name ]]
+    then
+        device_name=msm7x27-common
+    fi
   fi
 
   if [[ "$GERRIT_PROJECT" == *vendor_google* ]]
