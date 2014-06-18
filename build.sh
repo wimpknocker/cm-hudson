@@ -47,7 +47,7 @@ if [ ! -z "$GERRIT_PROJECT" ]
 then
   export RELEASE_TYPE=CM_EXPERIMENTAL
   export CM_EXTRAVERSION="gerrit-$GERRIT_CHANGE_NUMBER-$GERRIT_PATCHSET_NUMBER"
-  export CLEAN=true
+  export CLEAN="device"
   export GERRIT_XLATION_LINT=true
   export VIRUS_SCAN=true
 
@@ -252,7 +252,7 @@ fi
 if [ "$LAST_BRANCH" != "$REPO_BRANCH-$CORE_BRANCH$RELEASE_MANIFEST" ]
 then
   echo "Branch has changed since the last build happened here. Forcing cleanup."
-  CLEAN="true"
+  CLEAN="full"
 fi
 
 . build/envsetup.sh
@@ -351,11 +351,15 @@ fi
 TIME_SINCE_LAST_CLEAN=$(expr $(date +%s) - $LAST_CLEAN)
 # convert this to hours
 TIME_SINCE_LAST_CLEAN=$(expr $TIME_SINCE_LAST_CLEAN / 60 / 60)
-if [ $TIME_SINCE_LAST_CLEAN -gt "24" -o $CLEAN = "true" ]
+if [ $TIME_SINCE_LAST_CLEAN -gt "72" -o $CLEAN = "true" -o $CLEAN = "full" ]
 then
-  echo "Cleaning!"
+  echo "Cleaning $CLEAN!"
   touch .clean
   make clobber
+elif [ $CLEAN = "device" ]
+then
+  echo "Cleaning out/target/!"
+  rm -fr out/target/
 else
   echo "Skipping clean: $TIME_SINCE_LAST_CLEAN hours since last clean."
 fi
