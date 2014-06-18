@@ -225,15 +225,15 @@ cat .repo/manifest.xml
 echo Syncing...
 # if sync fails:
 # clean repos (uncommitted changes are present), don't delete roomservice.xml, don't exit
-repo sync -d -c -f -j16
-check_result "repo sync failed.", false, false
+#repo sync -d -c -f -j16
+#check_result "repo sync failed.", false, false
 
 # sync again, delete roomservice.xml if sync fails
-repo sync -d -c -f -j4
-check_result "repo sync failed.", false, true
+#repo sync -d -c -f -j4
+#check_result "repo sync failed.", false, true
 
 # last sync, delete roomservice.xml and exit if sync fails
-repo sync -d -c -f -j4
+repo sync -d -c -f -j8
 check_result "repo sync failed.", true, true
 
 # SUCCESS
