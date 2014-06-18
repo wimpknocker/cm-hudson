@@ -358,8 +358,8 @@ then
   make clobber
 elif [ $CLEAN = "device" ]
 then
-  echo "Cleaning out/target/!"
-  rm -fr out/target/
+  echo "Cleaning $OUT!"
+  rm -fr $OUT
 else
   echo "Skipping clean: $TIME_SINCE_LAST_CLEAN hours since last clean."
 fi
