@@ -438,6 +438,14 @@ then
     else
         OTASCRIPT=./build/tools/releasetools/ota_from_target_files
     fi
+    if [ -s $OUT/ota_minigzip ]
+    then
+        OTASCRIPT="MINIGZIP=$(cat $OUT/ota_minigzip) $OTASCRIPT"
+    fi
+    if [ -s $OUT/ota_custom_bootimg_mk ]
+    then
+        OTASCRIPT="MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk) $OTASCRIPT"
+    fi
     if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
     then
         OTASCRIPT="$OTASCRIPT --backup=true"
@@ -495,7 +503,7 @@ then
     cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
     echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
 
-    rm -f $OUT/ota_script_path $OUT/ota_override_device $OUT/ota_extras_file $OUT/ota_separate_recovery
+    rm -f $OUT/ota_script_path $OUT/ota_minigzip $OUT/ota_custom_bootimg_mk $OUT/ota_override_device $OUT/ota_extras_file $OUT/ota_separate_recovery
 
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip*)
