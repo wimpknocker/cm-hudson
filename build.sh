@@ -440,11 +440,11 @@ then
     fi
     if [ -s $OUT/ota_minigzip ]
     then
-        MINIGZIP=$(cat $OUT/ota_minigzip)
+        export MINIGZIP=$(cat $OUT/ota_minigzip)
     fi
     if [ -s $OUT/ota_custom_bootimg_mk ] && [ -z $(strings -n1 $OUT/ota_custom_bootimg_mk) ]
     then
-        MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk)
+        export MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk)
     fi
     if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
     then
@@ -503,6 +503,8 @@ then
     cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
     echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
 
+    unset MKBOOTIMG
+    unset MINIGZIP
     rm -f $OUT/ota_script_path $OUT/ota_minigzip $OUT/ota_custom_bootimg_mk $OUT/ota_override_device $OUT/ota_extras_file $OUT/ota_separate_recovery
 
     # /archive
