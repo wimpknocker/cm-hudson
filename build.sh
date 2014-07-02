@@ -444,7 +444,7 @@ then
     fi
     if [ -s $OUT/ota_custom_bootimg_mk ]
     then
-        OTASCRIPT="MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk) $OTASCRIPT"
+        OTASCRIPT="MKBOOTIMG=$ANDROID_BUILD_TOP/$(cat $OUT/ota_custom_bootimg_mk) $OTASCRIPT"
     fi
     if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
     then
