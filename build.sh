@@ -440,7 +440,11 @@ then
     fi
     if [ -s $OUT/ota_minigzip ]
     then
-        OTASCRIPT="MINIGZIP=$(cat $OUT/ota_minigzip) $OTASCRIPT"
+        MINIGZIP=$(cat $OUT/ota_minigzip)
+    fi
+    if [ -s $OUT/ota_custom_bootimg_mk ] && [ -z $(strings -n1 $OUT/ota_custom_bootimg_mk) ]
+    then
+        MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk)
     fi
     if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
     then
