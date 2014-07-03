@@ -442,7 +442,7 @@ then
     then
         export MINIGZIP=$(cat $OUT/ota_minigzip)
     fi
-    if [ -s $OUT/ota_custom_bootimg_mk ] && [ -z $(strings -n1 $OUT/ota_custom_bootimg_mk) ]
+    if [ -s $OUT/ota_custom_bootimg_mk ] && [ -n "$(strings -n1 $OUT/ota_custom_bootimg_mk)" ]
     then
         export MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk)
     fi
