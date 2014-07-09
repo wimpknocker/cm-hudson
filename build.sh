@@ -109,6 +109,11 @@ then
   SYNC_PROTO=git
 fi
 
+if [ -z "$SIGN_BUILD" ]
+then
+  SIGN_BUILD=false
+fi
+
 # colorization fix in Jenkins
 export CL_RED="\"\033[31m\""
 export CL_GRN="\"\033[32m\""
@@ -223,14 +228,23 @@ echo Core Manifest:
 cat .repo/manifest.xml
 
 echo Syncing...
-# if sync fails:
-# clean repos (uncommitted changes are present), don't delete roomservice.xml, don't exit
-#repo sync -d -c -f -j16
-#check_result "repo sync failed.", false, false
 
-# sync again, delete roomservice.xml if sync fails
-#repo sync -d -c -f -j4
-#check_result "repo sync failed.", false, true
+if [ "$SIGN_BUILD" = "true" ]
+then
+  rm -rf $WORKSPACE/$REPO_BRANCH/build_env
+  git clone git@github.com:androidarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
+  if [ -f $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh ]
+  then
+    . $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
+  fi
+  # if sync fails:
+  # clean repos (uncommitted changes are present), don't delete roomservice.xml, don't exit
+  repo sync -d -c -f -j16
+  check_result "repo sync failed.", false, false
+  # sync again, delete roomservice.xml if sync fails
+  repo sync -d -c -f -j4
+  check_result "repo sync failed.", false, true
+fi
 
 # last sync, delete roomservice.xml and exit if sync fails
 repo sync -d -c -f -j8
@@ -292,7 +306,6 @@ if [ ! -z "$CM_EXTRAVERSION" ]
 then
   export CM_EXPERIMENTAL=true
 fi
-
 
 if [ ! -z "$GERRIT_CHANGE_NUMBER" ]
 then
@@ -403,11 +416,140 @@ then
   fi
 fi
 
-# /archive
-for f in $(ls $OUT/cm-*.zip*)
-do
-  ln $f $WORKSPACE/archive/$(basename $f)
-done
+
+if [ "$SIGN_BUILD" = "true" ]
+then
+  MODVERSION=$(cat $OUT/system/build.prop | grep ro.cm.version | cut -d = -f 2)
+  if [ ! -z "$MODVERSION" -a -f $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip ]
+  then
+    misc_info_txt=$OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER/META/misc_info.txt
+    function get_meta_val {
+        echo $(cat $misc_info_txt | grep ${1} | cut -d = -f 2)
+    }
+    custom_bootimg_mk=$(get_meta_val "custom_bootimg_mk")
+    if [ ! -z "$custom_bootimg_mk" ]
+    then
+        export MKBOOTIMG="$custom_bootimg_mk"
+    fi
+    minigzip=$(get_meta_val "minigzip")
+    if [ ! -z "$minigzip" ]
+    then
+        export MINIGZIP="$minigzip"
+    fi
+
+    OTASCRIPT=$(get_meta_val "ota_script_path")
+
+    override_device=$(get_meta_val "override_device")
+    if [ ! -z "$override_device" ]
+    then
+        OTASCRIPT="$OTASCRIPT --override_device=$override_device"
+    fi
+
+    extras_file=$(get_meta_val "extras_file")
+    if [ ! -z "$extras_file" ]
+    then
+        OTASCRIPT="$OTASCRIPT --extras_file=$extras_file"
+    fi
+
+    no_separate_recovery=$(get_meta_val "no_separate_recovery")
+    if [ ! -z "$no_separate_recovery" -a $no_separate_recovery = "true" ]
+    then
+        OTASCRIPT="$OTASCRIPT --no_separate_recovery=true"
+    fi
+
+    if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
+    then
+        OTASCRIPT="$OTASCRIPT --backup=true"
+    fi
+
+    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d build_env/keys $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
+    md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
+    if [ "$FASTBOOT_IMAGES" = "true" ]
+    then
+       ./build/tools/releasetools/img_from_target_files $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip
+       md5sum $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip > $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip.md5sum
+    fi
+
+    # file name conflict
+    function getFileName() {
+	echo ${1##*/}
+    }
+    DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=~/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
+    DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=~/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
+    DOWNLOAD_ANDROIDARMV6_ORG_LAST=~/download_androidarmv6_org/CyanogenModOTA/_last/$DEVICE
+    if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
+    then
+      DOWNLOAD_ANDROIDARMV6_ORG_DEVICE="$DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/stable"
+      DOWNLOAD_ANDROIDARMV6_ORG_DELTAS="$DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/stable"
+      DOWNLOAD_ANDROIDARMV6_ORG_LAST="$DOWNLOAD_ANDROIDARMV6_ORG_LAST/stable"
+    else
+      # Remove older nightlies and deltas
+      find $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE -name "cm*NIGHTLY*" -not -path "*/stable/*" -type f -mtime +63 -delete
+      find $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS -name "incremental-*" -not -path "*/stable/*" -type f -mtime +70 -delete
+    fi
+    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
+    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS
+    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
+
+    CM_ZIP=
+    for f in $(ls $WORKSPACE/archive/cm-*.zip)
+    do
+      CM_ZIP=$(basename $f)
+    done
+    if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/$CM_ZIP ]
+    then
+      echo "File $CM_ZIP exists on download.androidarmv6.org"
+      echo "Only 1 build is allowed for 1 device on 1 day"
+      make clobber >/dev/null
+      rm -fr $OUT
+      exit 1
+    fi
+
+    # changelog
+    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/cm-$MODVERSION.txt
+
+    # incremental
+    FILE_MATCH_intermediates=*.zip
+    FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
+    if [ "$FILE_LAST_intermediates" != "" ]; then
+      OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
+      LAST_BUILD_NUMBER=$(cat $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber)
+      $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      md5sum $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
+    fi
+    rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*.zip
+    rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
+    cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
+    echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
+
+    unset MKBOOTIMG
+    unset MINIGZIP
+
+    # /archive
+    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
+    do
+      cp $f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
+    done
+
+    # /recovery
+    if [ "$EXPORT_RECOVERY" = "true" -a -f $OUT/recovery.img ]
+    then
+      cp $OUT/recovery.img $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/recovery-$DEVICE.img
+    fi
+
+  else
+    echo "Unable to find target files to sign"
+    exit 1
+  fi
+else
+  # /archive
+  for f in $(ls $OUT/cm-*.zip*)
+  do
+    ln $f $WORKSPACE/archive/$(basename $f)
+  done
+fi
+
 if [ -f $OUT/utilties/update.zip ]
 then
   cp $OUT/utilties/update.zip $WORKSPACE/archive/recovery.zip
@@ -415,6 +557,7 @@ fi
 if [ -f $OUT/recovery.img ]
 then
   cp $OUT/recovery.img $WORKSPACE/archive
+
 fi
 
 # archive the build.prop as well
@@ -436,23 +579,3 @@ rmdir $TEMPSTASH
 # chmod the files in case UMASK blocks permissions
 chmod -R ugo+r $WORKSPACE/archive
 
-CMCP=$(which cmcp)
-if [ ! -z "$CMCP" -a ! -z "$CM_RELEASE" ]
-then
-  MODVERSION=$(cat $WORKSPACE/archive/build.prop | grep ro.modversion | cut -d = -f 2)
-  if [ -z "$MODVERSION" ]
-  then
-    MODVERSION=$(cat $WORKSPACE/archive/build.prop | grep ro.cm.version | cut -d = -f 2)
-  fi
-  if [ -z "$MODVERSION" ]
-  then
-    echo "Unable to detect ro.modversion or ro.cm.version."
-    exit 1
-  fi
-  echo Archiving release to S3.
-  for f in $(ls $WORKSPACE/archive)
-  do
-    cmcp $WORKSPACE/archive/$f release/$MODVERSION/$f > /dev/null 2> /dev/null
-    check_result "Failure archiving $f"
-  done
-fi
