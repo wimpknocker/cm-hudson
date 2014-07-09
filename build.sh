@@ -432,36 +432,47 @@ then
   MODVERSION=$(cat $OUT/system/build.prop | grep ro.cm.version | cut -d = -f 2)
   if [ ! -z "$MODVERSION" -a -f $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip ]
   then
-    if [ -s $OUT/ota_script_path ]
+    misc_info_txt=$OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER/META/misc_info.txt
+    function get_meta_val {
+        echo $(cat $misc_info_txt | grep ${1} | cut -d = -f 2)
+    }
+
+    custom_bootimg_mk=$(get_meta_val "custom_bootimg_mk")
+    if [ ! -z "$custom_bootimg_mk" ]
     then
-        OTASCRIPT=$(cat $OUT/ota_script_path)
-    else
-        OTASCRIPT=./build/tools/releasetools/ota_from_target_files
+        export MKBOOTIMG="$custom_bootimg_mk"
     fi
-    if [ -s $OUT/ota_minigzip ]
+    minigzip=$(get_meta_val "minigzip")
+    if [ ! -z "$minigzip" ]
     then
-        export MINIGZIP=$(cat $OUT/ota_minigzip)
+        export MINIGZIP="$minigzip"
     fi
-    if [ -s $OUT/ota_custom_bootimg_mk ] && [ -n "$(strings -n1 $OUT/ota_custom_bootimg_mk)" ]
+
+    OTASCRIPT=$(get_meta_val "ota_script_path")
+
+    override_device=$(get_meta_val "override_device")
+    if [ ! -z "$override_device" ]
     then
-        export MKBOOTIMG=$(cat $OUT/ota_custom_bootimg_mk)
+        OTASCRIPT="$OTASCRIPT --override_device=$override_device"
     fi
+
+    extras_file=$(get_meta_val "extras_file")
+    if [ ! -z "$extras_file" ]
+    then
+        OTASCRIPT="$OTASCRIPT --extras_file=$extras_file"
+    fi
+
+    no_separate_recovery=$(get_meta_val "no_separate_recovery")
+    if [ ! -z "$no_separate_recovery" -a $no_separate_recovery = "true" ]
+    then
+        OTASCRIPT="$OTASCRIPT --no_separate_recovery=true"
+    fi
+
     if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
     then
         OTASCRIPT="$OTASCRIPT --backup=true"
     fi
-    if [ -s $OUT/ota_override_device ]
-    then
-        OTASCRIPT="$OTASCRIPT --override_device=$(cat $OUT/ota_override_device)"
-    fi
-    if [ -s $OUT/ota_extras_file ]
-    then
-        OTASCRIPT="$OTASCRIPT $(cat $OUT/ota_extras_file)"
-    fi
-    if [ -s $OUT/ota_separate_recovery ]
-    then
-        OTASCRIPT="$OTASCRIPT $(cat $OUT/ota_separate_recovery)"
-    fi
+
     ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d build_env/keys $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
     $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
     md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
@@ -505,7 +516,6 @@ then
 
     unset MKBOOTIMG
     unset MINIGZIP
-    rm -f $OUT/ota_script_path $OUT/ota_minigzip $OUT/ota_custom_bootimg_mk $OUT/ota_override_device $OUT/ota_extras_file $OUT/ota_separate_recovery
 
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip*)
