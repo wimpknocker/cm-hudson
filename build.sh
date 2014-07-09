@@ -426,11 +426,6 @@ then
     function get_meta_val {
         echo $(cat $misc_info_txt | grep ${1} | cut -d = -f 2)
     }
-    custom_bootimg_mk=$(get_meta_val "custom_bootimg_mk")
-    if [ ! -z "$custom_bootimg_mk" ]
-    then
-        export MKBOOTIMG="$custom_bootimg_mk"
-    fi
     minigzip=$(get_meta_val "minigzip")
     if [ ! -z "$minigzip" ]
     then
@@ -523,7 +518,6 @@ then
     cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
     echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
 
-    unset MKBOOTIMG
     unset MINIGZIP
 
     # /archive
