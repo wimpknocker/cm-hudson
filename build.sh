@@ -447,7 +447,7 @@ then
     fi
 
     no_separate_recovery=$(get_meta_val "no_separate_recovery")
-    if [ ! -z "$no_separate_recovery" -a $no_separate_recovery = "true" ]
+    if [ ! -z "$no_separate_recovery" -a "$no_separate_recovery" = "true" ]
     then
         OTASCRIPT="$OTASCRIPT --no_separate_recovery=true"
     fi
