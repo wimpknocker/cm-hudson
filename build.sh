@@ -232,10 +232,13 @@ echo Syncing...
 if [ "$SIGN_BUILD" = "true" ]
 then
   rm -rf $WORKSPACE/$REPO_BRANCH/build_env
+  # androidarmv6 keys... for more information: build/target/product/security/README
   git clone git@github.com:androidarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
-  if [ -f $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh ]
+  if [ -d "$WORKSPACE/$REPO_BRANCH/build_env/keys" ]
   then
-    . $WORKSPACE/$REPO_BRANCH/build_env/envsetup.sh
+    export OTA_PACKAGE_SIGNING_KEY=build_env/keys/platform
+    export DEFAULT_SYSTEM_DEV_CERTIFICATE=build_env/keys/releasekey
+    export OTA_PACKAGE_SIGNING_DIR=build_env/keys
   fi
   # if sync fails:
   # clean repos (uncommitted changes are present), don't delete roomservice.xml, don't exit
@@ -457,8 +460,8 @@ then
         OTASCRIPT="$OTASCRIPT --backup=true"
     fi
 
-    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d build_env/keys $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
-    $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
+    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d $OTA_PACKAGE_SIGNING_DIR $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
     md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
     if [ "$FASTBOOT_IMAGES" = "true" ]
     then
@@ -510,7 +513,7 @@ then
     if [ "$FILE_LAST_intermediates" != "" ]; then
       OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
       LAST_BUILD_NUMBER=$(cat $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber)
-      $OTASCRIPT -k build_env/keys/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
       md5sum $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
     fi
     rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*.zip
