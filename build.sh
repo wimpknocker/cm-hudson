@@ -114,6 +114,11 @@ then
   SIGN_BUILD=false
 fi
 
+if [ -z "$FORCE_FULL_OTA" ]
+then
+  FORCE_FULL_OTA=false
+fi
+
 # colorization fix in Jenkins
 export CL_RED="\"\033[31m\""
 export CL_GRN="\"\033[32m\""
@@ -508,6 +513,11 @@ then
     cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/cm-$MODVERSION.txt
 
     # incremental
+    if [ "$FORCE_FULL_OTA" = "true" ]
+    then
+      rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*.zip
+      rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
+    fi
     FILE_MATCH_intermediates=*.zip
     FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
     if [ "$FILE_LAST_intermediates" != "" ]; then
