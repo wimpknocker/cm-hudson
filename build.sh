@@ -428,6 +428,7 @@ fi
 if [ "$SIGN_BUILD" = "true" ]
 then
   MODVERSION=$(cat $OUT/system/build.prop | grep ro.cm.version | cut -d = -f 2)
+  SDKVERSION=$(cat $OUT/system/build.prop | grep ro.build.version.sdk | cut -d = -f 2)
   if [ ! -z "$MODVERSION" -a -f $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip ]
   then
     misc_info_txt=$OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER/META/misc_info.txt
@@ -480,7 +481,7 @@ then
     }
     DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=~/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
     DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=~/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
-    DOWNLOAD_ANDROIDARMV6_ORG_LAST=~/download_androidarmv6_org/CyanogenModOTA/_last/$DEVICE
+    DOWNLOAD_ANDROIDARMV6_ORG_LAST=~/download_androidarmv6_org/CyanogenModOTA/_last/$SDKVERSION/$DEVICE
     if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
     then
       DOWNLOAD_ANDROIDARMV6_ORG_DEVICE="$DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/stable"
