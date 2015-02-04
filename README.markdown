@@ -31,6 +31,6 @@ https://github.com/androidarmv6/hudson/blob/master/authorized_keys
 The job uses the following script:
 
 ```bash
-curl -O https://raw.github.com/androidarmv6/hudson/master/job.sh
+curl -O -L https://raw.github.com/androidarmv6/hudson/master/job.sh
 . ./job.sh
 ```

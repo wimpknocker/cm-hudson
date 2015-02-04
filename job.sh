@@ -1,3 +1,12 @@
+export
+
+ZIPDEVICE=$(echo $LUNCH | sed s#cm_##g | sed s#-userdebug##g | sed s#-eng##g)
+if [ -z "$ZIPDEVICE" ]
+then
+  echo "EMPTY DEVICE"
+  exit 1
+fi
+
 if [ -z "$HOME" ]
 then
   echo HOME not in environment, guessing...
@@ -11,12 +20,15 @@ export WORKSPACE=$PWD
 
 if [ ! -d hudson ]
 then
-  git clone git://github.com/androidarmv6/hudson.git
+  git clone git://github.com/androidarmv6/hudson.git -b master
 fi
 
 cd hudson
 ## Get rid of possible local changes
 git reset --hard
 git pull -s resolve
+cd ..
 
+# BUILD
+cp -fr hudson/build.sh build.sh
 exec ./build.sh
