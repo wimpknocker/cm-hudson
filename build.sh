@@ -593,3 +593,7 @@ rmdir $TEMPSTASH
 # chmod the files in case UMASK blocks permissions
 chmod -R ugo+r $WORKSPACE/archive
 
+# copy to workspace
+rm -fr $OLDWORKSPACE/archive/*
+cp -a $WORKSPACE/archive/. $OLDWORKSPACE/archive/.
+

@@ -33,7 +33,4 @@ cd ..
 
 # BUILD
 cp -fr hudson/build.sh build.sh
-. ./build.sh
-rm -fr $OLDWORKSPACE/archive/*
-cp -a $WORKSPACE/archive/. $OLDWORKSPACE/archive/.
-
+exec ./build.sh
