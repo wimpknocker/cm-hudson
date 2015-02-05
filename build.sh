@@ -594,6 +594,7 @@ rmdir $TEMPSTASH
 chmod -R ugo+r $WORKSPACE/archive
 
 # copy to workspace
-rm -fr $OLDWORKSPACE/archive/*
+rm -fr $OLDWORKSPACE/archive
+mkdir -p $OLDWORKSPACE/archive
 cp -a $WORKSPACE/archive/. $OLDWORKSPACE/archive/.
 
