@@ -16,7 +16,7 @@ fi
 cd $WORKSPACE
 mkdir -p ../android
 cd ../android
-OLDWORKSPACE=$WORKSPACE
+export OLDWORKSPACE=$WORKSPACE
 export WORKSPACE=$PWD
 export
 
@@ -33,6 +33,7 @@ cd ..
 
 # BUILD
 cp -fr hudson/build.sh build.sh
-exec ./build.sh
-rm -fr $OLDWORKSPACE/archive
-cp -a $WORKSPACE/archive $OLDWORKSPACE
+. ./build.sh
+rm -fr $OLDWORKSPACE/archive/*
+cp -a $WORKSPACE/archive/. $OLDWORKSPACE/archive/.
+
