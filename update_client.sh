@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm $JENKINS_BUILD_DIR/packages/apps/OpenDelta/res/values/config.xml
+rm packages/apps/OpenDelta/res/values/config.xml
 echo '<?xml version="1.0" encoding="UTF-8"?>
     <!-- Output some debug strings -->
     <item type="bool" name="debug_output">false</item>
@@ -38,4 +38,4 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
         <item>n7000</item>
         <item>i777</item>
     </string-array>
-</resources>' > $JENKINS_BUILD_DIR/packages/apps/OpenDelta/res/values/config.xml
+</resources>' > packages/apps/OpenDelta/res/values/config.xml
