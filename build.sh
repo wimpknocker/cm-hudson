@@ -401,6 +401,8 @@ then
     then
         export MINIGZIP="$minigzip"
     fi
+echo -e "pwd"
+last_dir=pwd
 
     BIN_JAVA=java
     BIN_MINSIGNAPK=$ANDROID_HOST_OUT/opendelta/minsignapk.jar
@@ -420,7 +422,11 @@ then
 
     if [ ! -e ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar ]; then
         mkdir -p ${ANDROID_HOST_OUT}/opendelta
-        wget https://raw.github.com/omnirom/android_packages_apps_OpenDelta/android-5.1/server/minsignapk.jar -o ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar
+        mkdir $WORKSPACE/temp
+        cd $WORKSPACE/temp
+        svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/server files
+        cd files
+        cp *.jar $ANDROID_HOST_OUT/opendelta
     fi
 
     if [ ! -e ${ANDROID_HOST_OUT}/opendelta/xdelta3 ]; then
@@ -428,6 +434,7 @@ then
         cd $WORKSPACE/temp
         svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/jni install
         cd install/xdelta3-3.0.7
+        chmod +x configure
         ./configure
         make
         cp xdelta3 ${ANDROID_HOST_OUT}/opendelta/xdelta3
@@ -440,7 +447,7 @@ then
     fi
 
     # Clean
-    cd $JENKINS_BUILD_DIR
+    cd $last_dir
     rm -rf $WORKSPACE/temp
 
     # ------ PROCESS ------
@@ -477,6 +484,12 @@ nextPowerOf2() {
     CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
     LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
     LAST_BASE=$(getFileNameNoExt $LAST)
+
+if [ -e $WORKSPACE/archive/cm-*.zip ]; then
+    echo -e "$LAST not found"
+    cp $CURRENT $WORKSPACE/archive/
+    exit 1
+fi
 
     rm -rf work
     mkdir work
