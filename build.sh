@@ -5,13 +5,8 @@ function check_result {
   then
     local err_message=${1:-""}
     local exit_die=${2:-"true"}
-    local rm_roomservice=${3:-"true"}
     (repo forall -c "git reset --hard; git clean -fdx") >/dev/null
     rm -f .repo/local_manifests/dyn-*.xml
-    if [ "$rm_roomservice" = "true" ]
-    then
-      rm -f .repo/local_manifests/roomservice.xml
-    fi
     echo $err_message
     if [ "$exit_die" = "true" ]
     then
@@ -49,15 +44,14 @@ then
   export CM_EXTRAVERSION="gerrit-$GERRIT_CHANGE_NUMBER-$GERRIT_PATCHSET_NUMBER"
   export CLEAN="device"
   export GERRIT_XLATION_LINT=true
-  export VIRUS_SCAN=true
 
-  vendor_name=$(echo $GERRIT_PROJECT | grep -Po '.*(?<=android_device_)[^_]*' | sed -e s#androidarmv6/android_device_##g)
-  device_name=$(echo $GERRIT_PROJECT | grep '.*android_device_[^_]*_' | sed -e s#.*android_device_[^_]*_##g | sed s#androidarmv6/##g )
+  vendor_name=$(echo $GERRIT_PROJECT | grep -Po '.*(?<=android_device_)[^_]*' | sed -e s#CyanogenMod/android_device_##g)
+  device_name=$(echo $GERRIT_PROJECT | grep '.*android_device_[^_]*_' | sed -e s#.*android_device_[^_]*_##g | sed s#CyanogenMod/##g )
 
   if [[ "$GERRIT_PROJECT" == *kernel* ]]
   then
-    vendor_name=$(echo $GERRIT_PROJECT | grep -Po '.*(?<=android_kernel_)[^_]*' | sed -e s#androidarmv6/android_kernel_##g)
-    device_name=$(echo $GERRIT_PROJECT | grep '.*android_kernel_[^_]*_' | sed -e s#.*android_kernel_[^_]*_##g | sed s#androidarmv6/##g)
+    vendor_name=$(echo $GERRIT_PROJECT | grep -Po '.*(?<=android_kernel_)[^_]*' | sed -e s#CyanogenMod/android_kernel_##g)
+    device_name=$(echo $GERRIT_PROJECT | grep '.*android_kernel_[^_]*_' | sed -e s#.*android_kernel_[^_]*_##g | sed s#CyanogenMod/##g)
     if [[ "bcm21553-common" != $device_name ]]
     then
         device_name=msm7x27-common
@@ -69,17 +63,17 @@ then
     export MINI_GAPPS=true
   fi
 
-  if [[ "$GERRIT_PROJECT" == "androidarmv6/android" ]]
+  if [[ "$GERRIT_PROJECT" == "CyanogenMod/android" ]]
   then
     export CHERRYPICK_REV=$GERRIT_PATCHSET_REVISION
   fi
 
   # LDPI device (default)
-  LUNCH=cm_totoro-userdebug
+  LUNCH=cm_$(DEVICE)-userdebug
   if [ ! -z $vendor_name ] && [ ! -z $device_name ]
   then
     # Workaround for failing translation checks in common device repositories
-    LUNCH=$(echo cm_$device_name-userdebug@$vendor_name | sed -f $WORKSPACE/hudson/androidarmv6-shared-repo.map)
+    LUNCH=$(echo cm_$device_name-userdebug@$vendor_name | sed -f $WORKSPACE/hudson/shared-repo.map)
   fi
   export LUNCH=$LUNCH
 fi
@@ -114,11 +108,6 @@ then
   SIGN_BUILD=false
 fi
 
-if [ -z "$FORCE_FULL_OTA" ]
-then
-  FORCE_FULL_OTA=false
-fi
-
 # colorization fix in Jenkins
 export CL_RED="\"\033[31m\""
 export CL_GRN="\"\033[32m\""
@@ -130,12 +119,11 @@ export CL_RST="\"\033[0m\""
 
 cd $WORKSPACE
 rm -rf archive
-mkdir -p archive
+mkdir -p archive/delta
 export BUILD_NO=$BUILD_NUMBER
 unset BUILD_NUMBER
 
-export PATH=~/bin:$PATH
-export BUILD_WITH_COLORS=0
+export BUILD_WITH_COLORS=1
 
 if [[ "$RELEASE_TYPE" == "CM_RELEASE" ]]
 then
@@ -148,9 +136,12 @@ fi
 REPO=$(which repo)
 if [ -z "$REPO" ]
 then
-  mkdir -p ~/bin
+  mkdir ~/bin
+  export PATH=~/bin:$PATH
   curl https://dl-ssl.google.com/dl/googlesource/git-repo/repo > ~/bin/repo
   chmod a+x ~/bin/repo
+  source ~/.profile
+  repo selfupdate
 fi
 
 if [ -z "$BUILD_USER_ID" ]
@@ -158,8 +149,8 @@ then
   export BUILD_USER_ID=$(whoami)
 fi
 
-git config --global user.name $BUILD_USER_ID@androidarmv6
-git config --global user.email jenkins@androidarmv6.org
+git config --global user.name $BUILD_USER_ID@wimpnether
+git config --global user.email $(whoami)@wimpnether.net
 
 JENKINS_BUILD_DIR=$REPO_BRANCH
 
@@ -181,26 +172,11 @@ else
   MANIFEST=""
 fi
 
-
-# remove non-core repos
-rm -fr kernel/
-rm -fr device/lge/
-rm -fr device/samsung/
-rm -fr device/zte/
-rm -fr vendor/lge/
-rm -fr vendor/samsung/
-rm -fr vendor/zte/
-
-# remove manifests
-rm -rf .repo/manifests*
-rm -f .repo/local_manifests/dyn-*.xml
-rm -f .repo/local_manifest.xml
-
 if [[ "$SYNC_PROTO" == "ssh" ]]
 then
-  repo init -u ssh://git@github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
+  repo init -u ssh://git@github.com/CyanogenMod/android.git -b $CORE_BRANCH $MANIFEST
 else
-  repo init -u $SYNC_PROTO://github.com/androidarmv6/android.git -b $CORE_BRANCH $MANIFEST
+  repo init -u $SYNC_PROTO://github.com/CyanogenMod/android.git -b $CORE_BRANCH $MANIFEST
 fi
 check_result "repo init failed."
 
@@ -218,7 +194,7 @@ then
   # make sure ccache is in PATH
   export PATH="$PATH:/opt/local/bin/:$PWD/prebuilts/misc/$(uname|awk '{print tolower($0)}')-x86/ccache"
   #export CCACHE_DIR=/ccj/$JOB_NAME/$REPO_BRANCH/$DEVICE
-  export CCACHE_DIR=/ccj/$DEVICE
+  export CCACHE_DIR=$WORKSPACE/ccache/$DEVICE
   mkdir -p $CCACHE_DIR
 fi
 
@@ -230,39 +206,23 @@ fi
 mkdir -p .repo/local_manifests
 rm -f .repo/local_manifest.xml
 
+cp $WORKSPACE/cm-hudson/target/local_manifests/*.xml .repo/local_manifests/
+
 echo Core Manifest:
 cat .repo/manifest.xml
 
 echo Syncing...
-
-if [ "$SIGN_BUILD" = "true" ]
-then
-  rm -rf $WORKSPACE/$REPO_BRANCH/build_env
-  # androidarmv6 keys... for more information: build/target/product/security/README
-  git clone git@github.com:androidarmv6/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
-  if [ -d "$WORKSPACE/$REPO_BRANCH/build_env/keys" ]
-  then
-    export OTA_PACKAGE_SIGNING_KEY=build_env/keys/platform
-    export DEFAULT_SYSTEM_DEV_CERTIFICATE=build_env/keys/releasekey
-    export OTA_PACKAGE_SIGNING_DIR=build_env/keys
-  fi
-  # if sync fails:
-  # clean repos (uncommitted changes are present), don't delete roomservice.xml, don't exit
-  repo sync -d -c -f -j16
-  check_result "repo sync failed.", false, false
-  # sync again, delete roomservice.xml if sync fails
-  repo sync -d -c -f -j4
-  check_result "repo sync failed.", false, true
-fi
-
-# last sync, delete roomservice.xml and exit if sync fails
+# if sync fails, sync again, if sync fails then exit
 repo sync -d -c -f -j8
-check_result "repo sync failed.", true, true
+check_result "repo sync failed.", false,
+
+repo sync -d -c -f -j1
+check_result "repo sync failed.", true
 
 # SUCCESS
 echo Sync complete.
 
-$WORKSPACE/hudson/cm-setup.sh
+$WORKSPACE/cm-hudson/cm-setup.sh
 
 if [ -f .last_branch ]
 then
@@ -294,7 +254,7 @@ repo manifest -o $WORKSPACE/archive/manifest.xml -r
 
 # restore all local manifests
 mv $TEMPSTASH/* .repo/local_manifests/ 2>/dev/null
-rmdir $TEMPSTASH
+rm -rf $TEMPSTASH
 
 rm -f $OUT/cm-*.zip*
 
@@ -390,12 +350,28 @@ echo "$REPO_BRANCH-$CORE_BRANCH$RELEASE_MANIFEST" > .last_branch
 
 # envsetup.sh:mka = schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
 # Don't add -jXX. mka adds it automatically...
-if [ "$JOB_NAME" = "cm-recovery" ]
-then
-  time mka recoveryzip recoveryimage #checkapi
-else
-  time mka bacon recoveryzip recoveryimage #checkapi
-fi
+case "$JOB_NAME" in
+    cm-recovery)
+        source $WORKSPACE/cm-hudson/update_zip.sh recovery
+    ;;
+    cm-kernel)
+        source $WORKSPACE/cm-hudson/update_zip.sh kernel
+    ;;
+
+    blackhawk-kernel
+        source $WORKSPACE/cm-hudson/update_zip.sh blackhawk-kernel
+    ;;
+
+    blackhawk-recovery
+        source $WORKSPACE/cm-hudson/update_zip.sh blackhawk-recovery
+    ;;
+
+    *)
+        time mka bacon #checkapi
+    ;;
+
+esac
+
 check_result "Build failed."
 
 if [ $USE_CCACHE -eq 1 ]
@@ -406,30 +382,6 @@ then
   ccache -s
   echo "============================================"
 fi
-
-# ClamAV virus scan
-if [ "$VIRUS_SCAN" = "true" ]
-then
-  CLAMAV_SIGNATURE=`clamdscan --version`
-  echo "Scanning for viruses with $CLAMAV_SIGNATURE..."
-  clamdscan --infected --multiscan --fdpass $OUT > $WORKSPACE/archive/virusreport.txt
-  SCAN_RESULT=$?
-  if [ $SCAN_RESULT -eq 0 ]
-  then
-    echo "No virus detected."
-  elif [ $SCAN_RESULT -eq 1 ]
-  then
-    echo Virus FOUND. Removing $OUT...
-    make clobber >/dev/null
-    rm -fr $OUT
-    if [ ! -z "$GERRIT_CHANGE_NUMBER" ] && [ ! -z "$GERRIT_PATCHSET_NUMBER" ] && [ ! -z "$BUILD_URL" ]
-    then
-      ssh -p 29418 review.androidarmv6.org gerrit review $GERRIT_CHANGE_NUMBER,$GERRIT_PATCHSET_NUMBER --code-review -1 --message "'$BUILD_URL : VIRUS FOUND'"
-    fi
-    exit 1
-  fi
-fi
-
 
 if [ "$SIGN_BUILD" = "true" ]
 then
@@ -447,69 +399,186 @@ then
         export MINIGZIP="$minigzip"
     fi
 
-    OTASCRIPT=$(get_meta_val "ota_script_path")
+    BIN_JAVA=java
+    BIN_MINSIGNAPK=$ANDROID_HOST_OUT/opendelta/minsignapk.jar
+    BIN_XDELTA=$ANDROID_HOST_OUT/opendelta/xdelta3
+    BIN_ZIPADJUST=$ANDROID_HOST_OUT/opendelta/zipadjust
+    # Sign Keys
+    KEY_X509=$JENKINS_BUILD_DIR/build/target/product/security/platform.x509.pem
+    KEY_PK8=$JENKINS_BUILD_DIR/build/target/product/security/platform.pk8
 
-    override_device=$(get_meta_val "override_device")
-    if [ ! -z "$override_device" ]
-    then
-        OTASCRIPT="$OTASCRIPT --override_device=$override_device"
+    #Tools
+    if [ ! -e ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg ]; then
+        mka unpackbootimg
+    fi
+    if [ ! -e ${ANDROID_PRODUCT_OUT}/obj/EXECUTABLES/updater_intermediates/updater ]; then
+        mka updater
     fi
 
-    extras_file=$(get_meta_val "extras_file")
-    if [ ! -z "$extras_file" ]
-    then
-        OTASCRIPT="$OTASCRIPT --extras_file=$extras_file"
+    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar ]; then
+        mkdir -p ${ANDROID_HOST_OUT}/opendelta
+        wget https://raw.github.com/omnirom/android_packages_apps_OpenDelta/android-5.1/server/minsignapk.jar -o ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar
     fi
 
-    no_separate_recovery=$(get_meta_val "no_separate_recovery")
-    if [ ! -z "$no_separate_recovery" -a "$no_separate_recovery" = "true" ]
-    then
-        OTASCRIPT="$OTASCRIPT --no_separate_recovery=true"
+    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/xdelta3 ]; then
+        mkdir $WORKSPACE/temp
+        cd $WORKSPACE/temp
+        svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/jni install
+        cd install/xdelta3-3.0.7
+        ./configure
+        make
+        cp xdelta3 ${ANDROID_HOST_OUT}/opendelta/xdelta3
     fi
 
-    if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
-    then
-        OTASCRIPT="$OTASCRIPT --backup=true"
+    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/zipadjust ]; then
+        cd $WORKSPACE/temp/install
+        gcc -o zipadjust zipadjust.c zipadjust_run.c -lz
+        cp zipadjust ${ANDROID_HOST_OUT}/opendelta/zipadjust
     fi
 
-    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d $OTA_PACKAGE_SIGNING_DIR $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
-    $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
-    md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
-    if [ "$FASTBOOT_IMAGES" = "true" ]
-    then
-       ./build/tools/releasetools/img_from_target_files $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip
-       md5sum $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip > $WORKSPACE/archive/cm-$MODVERSION-fastboot.zip.md5sum
-    fi
+    # Clean
+    cd $JENKINS_BUILD_DIR
+    rm -rf $WORKSPACE/temp
+
+    # ------ PROCESS ------
+
+getFileName() {
+	echo ${1##*/}
+    }
+
+getFileNameNoExt() {
+	echo ${1%.*}
+}
+
+getFileMD5() {
+	TEMP=$(md5sum -b $1)
+	for T in $TEMP; do echo $T; break; done
+}
+
+getFileSize() {
+	echo $(stat --print "%s" $1)
+}
+
+nextPowerOf2() {
+    local v=$1;
+    ((v -= 1));
+    ((v |= $v >> 1));
+    ((v |= $v >> 2));
+    ((v |= $v >> 4));
+    ((v |= $v >> 8));
+    ((v |= $v >> 16));
+    ((v += 1));
+    echo $v;
+}
+
+    CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
+    LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
+    LAST_BASE=$(getFileNameNoExt $LAST)
+
+    rm -rf work
+    mkdir work
+    rm -rf out
+    mkdir out
+
+    $BIN_ZIPADJUST --decompress $CURRENT work/current.zip
+    $BIN_ZIPADJUST --decompress $LAST work/last.zip
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/current.zip work/current_signed.zip
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/last.zip work/last_signed.zip
+    SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current.zip));
+    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/last.zip work/current.zip out/$LAST_BASE.update
+    SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current_signed.zip));
+    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/current.zip work/current_signed.zip out/$LAST_BASE.sign
+
+    MD5_CURRENT=$(getFileMD5 $CURRENT)
+    MD5_CURRENT_STORE=$(getFileMD5 work/current.zip)
+    MD5_CURRENT_STORE_SIGNED=$(getFileMD5 work/current_signed.zip)
+    MD5_LAST=$(getFileMD5 $LAST)
+    MD5_LAST_STORE=$(getFileMD5 work/last.zip)
+    MD5_LAST_STORE_SIGNED=$(getFileMD5 work/last_signed.zip)
+    MD5_UPDATE=$(getFileMD5 out/$LAST_BASE.update)
+    MD5_SIGN=$(getFileMD5 out/$LAST_BASE.sign)
+
+    SIZE_CURRENT=$(getFileSize $CURRENT)
+    SIZE_CURRENT_STORE=$(getFileSize work/current.zip)
+    SIZE_CURRENT_STORE_SIGNED=$(getFileSize work/current_signed.zip)
+    SIZE_LAST=$(getFileSize $LAST)
+    SIZE_LAST_STORE=$(getFileSize work/last.zip)
+    SIZE_LAST_STORE_SIGNED=$(getFileSize work/last_signed.zip)
+    SIZE_UPDATE=$(getFileSize out/$LAST_BASE.update)
+    SIZE_SIGN=$(getFileSize out/$LAST_BASE.sign)
+
+    DELTA=out/$LAST_BASE.delta
+
+    echo "{" > $DELTA
+    echo "  \"version\": 1," >> $DELTA
+    echo "  \"in\": {" >> $DELTA
+    echo "      \"name\": \"$FILE_LAST\"," >> $DELTA
+    echo "      \"size_store\": $SIZE_LAST_STORE," >> $DELTA
+    echo "      \"size_store_signed\": $SIZE_LAST_STORE_SIGNED," >> $DELTA
+    echo "      \"size_official\": $SIZE_LAST," >> $DELTA
+    echo "      \"md5_store\": \"$MD5_LAST_STORE\"," >> $DELTA
+    echo "      \"md5_store_signed\": \"$MD5_LAST_STORE_SIGNED\"," >> $DELTA
+    echo "      \"md5_official\": \"$MD5_LAST\"" >> $DELTA
+    echo "  }," >> $DELTA
+    echo "  \"update\": {" >> $DELTA
+    echo "      \"name\": \"$FILE_LAST_BASE.update\"," >> $DELTA
+    echo "      \"size\": $SIZE_UPDATE," >> $DELTA
+    echo "      \"size_applied\": $SIZE_CURRENT_STORE," >> $DELTA
+    echo "      \"md5\": \"$MD5_UPDATE\"," >> $DELTA
+    echo "      \"md5_applied\": \"$MD5_CURRENT_STORE\"" >> $DELTA
+    echo "  }," >> $DELTA
+    echo "  \"signature\": {" >> $DELTA
+    echo "      \"name\": \"$FILE_LAST_BASE.sign\"," >> $DELTA
+    echo "      \"size\": $SIZE_SIGN," >> $DELTA
+    echo "      \"size_applied\": $SIZE_CURRENT_STORE_SIGNED," >> $DELTA
+    echo "      \"md5\": \"$MD5_SIGN\"," >> $DELTA
+    echo "      \"md5_applied\": \"$MD5_CURRENT_STORE_SIGNED\"" >> $DELTA
+    echo "  }," >> $DELTA
+    echo "  \"out\": {" >> $DELTA
+    echo "      \"name\": \"$FILE_CURRENT\"," >> $DELTA
+    echo "      \"size_store\": $SIZE_CURRENT_STORE," >> $DELTA
+    echo "      \"size_store_signed\": $SIZE_CURRENT_STORE_SIGNED," >> $DELTA
+    echo "      \"size_official\": $SIZE_CURRENT," >> $DELTA
+    echo "      \"md5_store\": \"$MD5_CURRENT_STORE\"," >> $DELTA
+    echo "      \"md5_store_signed\": \"$MD5_CURRENT_STORE_SIGNED\"," >> $DELTA
+    echo "      \"md5_official\": \"$MD5_CURRENT\"" >> $DELTA
+    echo "  }" >> $DELTA
+    echo "}" >> $DELTA
+
+    cp out/* $WORKSPACE/archive/delta/.
+
+    rm -rf work
+    rm -rf out
 
     # file name conflict
     function getFileName() {
 	echo ${1##*/}
     }
-    DOWNLOAD_ANDROIDARMV6_ORG_DEVICE=~/download_androidarmv6_org/CyanogenModOTA/_builds/$DEVICE
-    DOWNLOAD_ANDROIDARMV6_ORG_DELTAS=~/download_androidarmv6_org/CyanogenModOTA/_deltas/$DEVICE
-    DOWNLOAD_ANDROIDARMV6_ORG_LAST=~/download_androidarmv6_org/CyanogenModOTA/_last/$SDKVERSION/$DEVICE
+
+    #Ota Dirs
+    DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/full_builds/$DEVICE
+    DOWNLOAD_WIMPNETHER_NET_DELTAS=~/otabuilds/nightlies/$DEVICE
+
     if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
     then
-      DOWNLOAD_ANDROIDARMV6_ORG_DEVICE="$DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/stable"
-      DOWNLOAD_ANDROIDARMV6_ORG_DELTAS="$DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/stable"
-      DOWNLOAD_ANDROIDARMV6_ORG_LAST="$DOWNLOAD_ANDROIDARMV6_ORG_LAST/stable"
+      DOWNLOAD_WIMPNETHER_NET_DEVICE="$DOWNLOAD_WIMPNETHER_NET_DEVICE"
     else
       # Remove older nightlies and deltas
-      find $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE -name "cm*NIGHTLY*" -not -path "*/stable/*" -type f -mtime +63 -delete
-      find $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS -name "incremental-*" -not -path "*/stable/*" -type f -mtime +70 -delete
+      find $DOWNLOAD_WIMPNETHER_NET_DEVICE -name "cm*NIGHTLY*" -type f -mtime +63 -delete
+      find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -type f -mtime +70 -delete
     fi
-    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
-    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS
-    mkdir -p $DOWNLOAD_ANDROIDARMV6_ORG_LAST
+
+    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE
+    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DELTAS
 
     CM_ZIP=
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
     do
       CM_ZIP=$(basename $f)
     done
-    if [ -f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/$CM_ZIP ]
+    if [ -f $DOWNLOAD_WIMPNETHER_NET_DEVICE/$CM_ZIP ]
     then
-      echo "File $CM_ZIP exists on download.androidarmv6.org"
+      echo "File $CM_ZIP exists on download.wimpnether.net"
       echo "Only 1 build is allowed for 1 device on 1 day"
       make clobber >/dev/null
       rm -fr $OUT
@@ -517,39 +586,23 @@ then
     fi
 
     # changelog
-    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/cm-$MODVERSION.txt
-
-    # incremental
-    if [ "$FORCE_FULL_OTA" = "true" ]
-    then
-      rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*.zip
-      rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
-    fi
-    FILE_MATCH_intermediates=*.zip
-    FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_MATCH_intermediates))
-    if [ "$FILE_LAST_intermediates" != "" ]; then
-      OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_ANDROIDARMV6_ORG_LAST/$FILE_LAST_intermediates"
-      LAST_BUILD_NUMBER=$(cat $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber)
-      $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
-      md5sum $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_ANDROIDARMV6_ORG_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
-    fi
-    rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/*.zip
-    rm -rf $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
-    cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_ANDROIDARMV6_ORG_LAST/$MODVERSION-signed-intermediate.zip
-    echo $BUILD_NUMBER > $DOWNLOAD_ANDROIDARMV6_ORG_LAST/buildnumber
-
-    unset MINIGZIP
+    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt
 
     # /archive
     for f in $(ls $WORKSPACE/archive/cm-*.zip*)
     do
-      cp $f $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE
+      cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
+    done
+
+    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.delta*)
+    do
+      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
     done
 
     # /recovery
     if [ "$EXPORT_RECOVERY" = "true" -a -f $OUT/recovery.img ]
     then
-      cp $OUT/recovery.img $DOWNLOAD_ANDROIDARMV6_ORG_DEVICE/recovery-$DEVICE.img
+      cp $OUT/recovery.img $DOWNLOAD_WIMPNETHER_NET_DEVICE/recovery/recovery-$DEVICE.img
     fi
 
   else

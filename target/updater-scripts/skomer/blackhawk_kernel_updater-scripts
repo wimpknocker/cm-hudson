@@ -1,0 +1,16 @@
+assert(getprop("ro.product.device") == "skomer" || getprop("ro.build.product") == "skomer" ||
+getprop("ro.product.device") == "s7710" || getprop("ro.build.product") == "s7710" ||
+getprop("ro.product.device") == "GT-S7710" || getprop("ro.build.product") == "GT-S7710");
+ui_print("");
+show_progress(0.100000, 0);
+ui_print("Flashing Blackhawks NEXT Kernel ");
+assert(package_extract_file("boot.img", "/tmp/boot.img"),
+show_progress(0.100000, 25);
+write_raw_image("/tmp/boot.img", "/dev/block/mmcblk0p20"),
+show_progress(0.100000, 40);
+delete("/tmp/boot.img"));
+show_progress(0.100000, 50);
+show_progress(0.100000, 90);
+ui_print("Finished");
+show_progress(0.100000, 100);
+

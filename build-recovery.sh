@@ -25,7 +25,7 @@ then
   exit 1
 fi
 
-REPO_BRANCH=cm-10.1
+REPO_BRANCH=cm-11.0
 
 if [ -z "$RECOVERY_IMAGE_URL" -a -z "$EXISTING_DEVICE" ]
 then
@@ -70,12 +70,15 @@ REPO=$(which repo)
 if [ -z "$REPO" ]
 then
   mkdir -p ~/bin
+  export PATH=~/bin:$PATH
   curl https://dl-ssl.google.com/dl/googlesource/git-repo/repo > ~/bin/repo
   chmod a+x ~/bin/repo
+  source ~/.profile
+  repo selfupdate
 fi
 
 git config --global user.name $(whoami)@$NODE_NAME
-git config --global user.email jenkins@androidarmv6.org
+git config --global user.email $(whoami)@wimpnether.net
 
 mkdir -p $REPO_BRANCH
 cd $REPO_BRANCH
@@ -83,11 +86,11 @@ cd $REPO_BRANCH
 rm -rf .repo/manifests*
 rm -rf .repo/local_manifests/
 rm -f .repo/local_manifest.xml
-repo init -u $SYNC_PROTO://github.com/androidarmv6/android.git -b $REPO_BRANCH
+repo init -u $SYNC_PROTO://github.com/CyanogenMod/android.git -b $REPO_BRANCH
 check_result "repo init failed."
 
 mkdir -p .repo/local_manifests
-cp $WORKSPACE/hudson/recovery.xml .repo/local_manifests/
+cp $WORKSPACE/hudson/local_manifests/$DEVICE/recovery.xml .repo/local_manifests/
 
 echo Manifest:
 cat .repo/manifest.xml
@@ -109,11 +112,10 @@ then
   lunch full-userdebug
   make -j4 unpackbootimg
 
-  UNPACKBOOTIMG=$(ls out/host/**/bin/unpackbootimg)
-  if [ -z "$UNPACKBOOTIMG" ]
-  then
+  UNPACKBOOTIMG=$(ls ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg)
+  if [ ! -e ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg ]; then
     echo unpackbootimg not found
-    exit 1
+    mka unpackbootimg
   fi
 
   echo Retrieving recovery image.
@@ -220,7 +222,7 @@ check_result "Build failed."
 if [ -z "$NO_UPLOAD" ]
 then
   pushd ROMManagerManifest
-  git commit -a -m "builder: $DEVICE updated on behalf of $INITIATING_OWNER $BUILD_NO: http://jenkins.androidarmv6.org/job/recovery/$BUILD_NO"
+  git commit -a -m "builder: $DEVICE updated on behalf of $INITIATING_OWNER $BUILD_NO: http://jenkins.wimpnether.org/job/recovery/$BUILD_NO"
   git push private HEAD:gh-pages
   popd
 fi

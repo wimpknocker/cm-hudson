@@ -5,16 +5,16 @@ then
 fi
 
 cd $WORKSPACE
-mkdir -p ../android
-cd ../android
+mkdir -p ../recovery-builds
+cd ../recovery-builds
 export WORKSPACE=$PWD
 
-if [ ! -d hudson ]
+if [ ! -d cm-hudson ]
 then
-  git clone git://github.com/androidarmv6/hudson.git
+  git clone git://github.com/wimpknocker/cm-hudson.git -b master
 fi
 
-cd hudson
+cd cm-hudson
 ## Get rid of possible local changes
 git reset --hard
 git pull -s resolve

@@ -19,23 +19,23 @@ fi
 
 # WORKSPACE
 cd $WORKSPACE
-mkdir -p ../android
-cd ../android
+mkdir -p ../cm-builds
+cd ../cm-builds
 export OLDWORKSPACE=$WORKSPACE
 export WORKSPACE=$PWD
 export
 
 #HUDSON
-if [ ! -d hudson ]
+if [ ! -d cm-hudson ]
 then
-  git clone git://github.com/androidarmv6/hudson.git -b master
+  git clone git://github.com/wimpknocker/cm-hudson.git -b master
 fi
-cd hudson
+cd cm-hudson
 ## Get rid of possible local changes
 git reset --hard
 git pull -s resolve
 cd ..
 
 # BUILD
-cp -fr hudson/build.sh build.sh
+cp -fr cm-hudson/build.sh build.sh
 exec ./build.sh

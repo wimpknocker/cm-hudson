@@ -1,0 +1,29 @@
+ui_print("");
+ui_print("");
+ui_print(" ###################### ");
+ui_print("  PhilZ Touch Recovery  ");
+ui_print("  Full Touch CWM Based  ");
+ui_print("            +           ");
+ui_print("   Advanced  Features   ");
+ui_print("  compiled from Source  ");
+ui_print("     by Wimpknocker     ");
+ui_print(" ###################### ");
+ui_print("");
+ui_print("");
+show_progress(1.000000, 0);
+
+(getprop("ro.product.device") == "skomer" || getprop("ro.build.product") == "skomer" || 
+ getprop("ro.product.device") == "s7710" || getprop("ro.build.product") == "s7710" || 
+ getprop("ro.product.device") == "GT-S7710" || getprop("ro.build.product") == "GT-S7710") || abort("This package is for \"skomer,s7710,GT-S7710\" devices
+this is a \"" + getprop("ro.product.device") + "\".");
+
+ui_print("Flashing Recovery...");
+set_progress(0.100000);
+package_extract_file("blackhawk-recovery.img", "/dev/block/mmcblk0p21");
+
+set_progress(1.000000);
+ui_print("Done, reboot recovery...");
+show_progress(1.000000, 0);
+
+ui_print("done");
+
