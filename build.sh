@@ -313,7 +313,7 @@ fi
 
 
 rm -f $WORKSPACE/changecount
-WORKSPACE=$WORKSPACE LUNCH=$LUNCH bash $WORKSPACE/hudson/changes/buildlog.sh 2>&1
+WORKSPACE=$WORKSPACE LUNCH=$LUNCH bash $WORKSPACE/cm-hudson/changes/buildlog.sh 2>&1
 if [ -f $WORKSPACE/changecount ]
 then
   CHANGE_COUNT=$(cat $WORKSPACE/changecount)
