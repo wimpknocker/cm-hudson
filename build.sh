@@ -222,6 +222,9 @@ check_result "repo sync failed.", true
 # SUCCESS
 echo Sync complete.
 
+# Update-client
+$WORKSPACE/cm-hudson/update_client.sh
+
 $WORKSPACE/cm-hudson/cm-setup.sh
 
 if [ -f .last_branch ]
