@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm $JENKINS_BUILD_DIR/packages/apps/OpenDelta/res/values/config.xml
 echo '<?xml version="1.0" encoding="UTF-8"?>
     <!-- Output some debug strings -->
