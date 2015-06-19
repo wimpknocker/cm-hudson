@@ -358,11 +358,11 @@ case "$JOB_NAME" in
         source $WORKSPACE/cm-hudson/update_zip.sh kernel
     ;;
 
-    blackhawk-kernel
+    blackhawk-kernel)
         source $WORKSPACE/cm-hudson/update_zip.sh blackhawk-kernel
     ;;
 
-    blackhawk-recovery
+    blackhawk-recovery)
         source $WORKSPACE/cm-hudson/update_zip.sh blackhawk-recovery
     ;;
 
