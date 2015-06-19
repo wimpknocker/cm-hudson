@@ -401,8 +401,9 @@ then
     then
         export MINIGZIP="$minigzip"
     fi
-echo -e "pwd"
-last_dir=pwd
+
+echo -e "$(pwd)"
+last_dir=$(pwd)
 
     BIN_JAVA=java
     BIN_MINSIGNAPK=$ANDROID_HOST_OUT/opendelta/minsignapk.jar
