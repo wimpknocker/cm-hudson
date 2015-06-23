@@ -125,6 +125,11 @@ unset BUILD_NUMBER
 
 export BUILD_WITH_COLORS=1
 
+# create empty patches.txt if it doesn't exist
+if [ ! -f $WORKSPACE/patches.txt ]; then
+    touch patches.txt
+fi
+
 if [[ "$RELEASE_TYPE" == "CM_RELEASE" ]]
 then
   export USE_CCACHE=0
@@ -222,9 +227,23 @@ check_result "repo sync failed.", true
 # SUCCESS
 echo Sync complete.
 
+# Apply gerrit changes from patches.txt. One change-id per line!
+if [ -f $WORKSPACE/patches.txt ]; then
+    while read line; do
+        GERRIT_CHANGES+="$line "
+    done < patches.txt
+
+    if [[ ! -z ${GERRIT_CHANGES} && ! ${GERRIT_CHANGES} == " " ]]; then
+        echo -e "${txtylw}Applying patches...${txtrst}"
+        python $JENKINS_BUILD_DIR/build/tools/repopick.py $GERRIT_CHANGES --ignore-missing --start-branch auto --abandon-first
+        echo -e "${txtgrn}Patches applied!${txtrst}"
+    fi
+fi
+
 # Update-client
 $WORKSPACE/cm-hudson/update_client.sh
 
+#Vendor
 $WORKSPACE/cm-hudson/cm-setup.sh
 
 if [ -f .last_branch ]
@@ -403,7 +422,7 @@ then
     fi
 
 #Only test
-last_dir=pwd
+last_dir=$(pwd)
 echo -e "$last_dir"
 
     BIN_JAVA=java
@@ -495,49 +514,48 @@ nextPowerOf2() {
     echo $v;
 }
 
-    if [ -e $WORKSPACE/archive/cm-*.zip ]; then
-        echo -e "$LAST not found"
-        cp $OUT/cm-*.zip $WORKSPACE/archive/
-        exit 1
+    if [ -e $WORKSPACE/archive/cm-*.zip ]
+        then
+          echo -e "Last zip not found"
+          cp $OUT/cm-*.zip $WORKSPACE/archive/
+          exit 1
     fi
 
     CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
     LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
     LAST_BASE=$(getFileNameNoExt $LAST)
 
-    rm -rf work
-    mkdir work
-    rm -rf out
-    mkdir out
+    mkdir $WORKSPACE/work
+    mkdir $WORKSPACE/out
 
-    $BIN_ZIPADJUST --decompress $CURRENT work/current.zip
-    $BIN_ZIPADJUST --decompress $LAST work/last.zip
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/current.zip work/current_signed.zip
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/last.zip work/last_signed.zip
-    SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current.zip));
-    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/last.zip work/current.zip out/$LAST_BASE.update
+    $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
+    $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip work/current_signed.zip
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip work/last_signed.zip
+    SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current.zip));
+    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/last.zip $WORKSPACE/work/current.zip $WORKSPACE/out/$LAST_BASE.update
     SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current_signed.zip));
-    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/current.zip work/current_signed.zip out/$LAST_BASE.sign
+    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/current.zip $WORKSPACE/work/current_signed.zip $WORKSPACE/out/$LAST_BASE.sign
 
     MD5_CURRENT=$(getFileMD5 $CURRENT)
-    MD5_CURRENT_STORE=$(getFileMD5 work/current.zip)
-    MD5_CURRENT_STORE_SIGNED=$(getFileMD5 work/current_signed.zip)
+    MD5_CURRENT_STORE=$(getFileMD5 $WORKSPACE/work/current.zip)
+    MD5_CURRENT_STORE_SIGNED=$(getFileMD5 $WORKSPACE/work/current_signed.zip)
     MD5_LAST=$(getFileMD5 $LAST)
-    MD5_LAST_STORE=$(getFileMD5 work/last.zip)
-    MD5_LAST_STORE_SIGNED=$(getFileMD5 work/last_signed.zip)
-    MD5_UPDATE=$(getFileMD5 out/$LAST_BASE.update)
-    MD5_SIGN=$(getFileMD5 out/$LAST_BASE.sign)
+    MD5_LAST_STORE=$(getFileMD5 $WORKSPACE/work/last.zip)
+    MD5_LAST_STORE_SIGNED=$(getFileMD5 $WORKSPACE/work/last_signed.zip)
+    MD5_UPDATE=$(getFileMD5 $WORKSPACE/out/$LAST_BASE.update)
+    MD5_SIGN=$(getFileMD5 $WORKSPACE/out/$LAST_BASE.sign)
 
     SIZE_CURRENT=$(getFileSize $CURRENT)
-    SIZE_CURRENT_STORE=$(getFileSize work/current.zip)
-    SIZE_CURRENT_STORE_SIGNED=$(getFileSize work/current_signed.zip)
+    SIZE_CURRENT_STORE=$(getFileSize $WORKSPACE/work/current.zip)
+    SIZE_CURRENT_STORE_SIGNED=$(getFileSize $WORKSPACE/work/current_signed.zip)
     SIZE_LAST=$(getFileSize $LAST)
-    SIZE_LAST_STORE=$(getFileSize work/last.zip)
-    SIZE_LAST_STORE_SIGNED=$(getFileSize work/last_signed.zip)
-    SIZE_UPDATE=$(getFileSize out/$LAST_BASE.update)
-    SIZE_SIGN=$(getFileSize out/$LAST_BASE.sign)
+    SIZE_LAST_STORE=$(getFileSize $WORKSPACE/work/last.zip)
+    SIZE_LAST_STORE_SIGNED=$(getFileSize $WORKSPACE/work/last_signed.zip)
+    SIZE_UPDATE=$(getFileSize $WORKSPACE/out/$LAST_BASE.update)
+    SIZE_SIGN=$(getFileSize $WORKSPACE/out/$LAST_BASE.sign)
 
-    DELTA=out/$LAST_BASE.delta
+    DELTA=$WORKSPACE/out/$LAST_BASE.delta
 
     echo "{" > $DELTA
     echo "  \"version\": 1," >> $DELTA
@@ -575,15 +593,10 @@ nextPowerOf2() {
     echo "  }" >> $DELTA
     echo "}" >> $DELTA
 
-    cp out/* $WORKSPACE/archive/delta/.
+    cp $WORKSPACE/out/* $WORKSPACE/archive/delta/.
 
-    rm -rf work
-    rm -rf out
-
-    # file name conflict
-    function getFileName() {
-	echo ${1##*/}
-    }
+    rm -rf $WORKSPACE/work
+    rm -rf $WORKSPACE/out
 
     #Ota Dirs
     DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/full_builds/$DEVICE
