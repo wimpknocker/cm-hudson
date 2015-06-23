@@ -402,8 +402,9 @@ then
         export MINIGZIP="$minigzip"
     fi
 
-echo -e "$(pwd)"
-last_dir=$(pwd)
+#Only test
+last_dir=pwd
+echo -e "$last_dir"
 
     BIN_JAVA=java
     BIN_MINSIGNAPK=$ANDROID_HOST_OUT/opendelta/minsignapk.jar
@@ -415,6 +416,8 @@ last_dir=$(pwd)
 
     #Tools
     mkdir -p ${ANDROID_HOST_OUT}/opendelta
+    check_result "unable make ${ANDROID_HOST_OUT}/opendelta dir"
+
     if [ ! -e ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg ]; then
         mka unpackbootimg
     fi
@@ -427,6 +430,7 @@ last_dir=$(pwd)
         mkdir $WORKSPACE/temp
         cd $WORKSPACE/temp
         svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/server files
+        check_result "Get minsignapk failed"
         cd files
         cp minsignapk.jar $ANDROID_HOST_OUT/opendelta/minsignapk.jar
         cp MinSignAPK.java $ANDROID_HOST_OUT/opendelta/MinSignAPK.java
@@ -442,6 +446,7 @@ last_dir=$(pwd)
         chmod +x configure
         ./configure
         make
+        check_result "xdelta3 build failed"
         cp xdelta3 ${ANDROID_HOST_OUT}/opendelta/xdelta3
         echo "Done"
     fi
@@ -450,6 +455,7 @@ last_dir=$(pwd)
         echo "Building zipadjust"
         cd $WORKSPACE/temp/install
         gcc -o zipadjust zipadjust.c zipadjust_run.c -lz
+        check_result "zipadjust build failed"
         cp zipadjust ${ANDROID_HOST_OUT}/opendelta/zipadjust
         echo "Done"
     fi
