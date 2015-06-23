@@ -483,6 +483,17 @@ echo -e "$last_dir"
     cd $last_dir
     rm -rf $WORKSPACE/temp
 
+    if [ -e $WORKSPACE/archive/cm-*.zip ]
+        then
+          echo -e "Last zip not found"
+          cp $OUT/cm-*.zip $WORKSPACE/archive/
+          exit 1
+    fi
+
+    CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
+    LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
+    LAST_BASE=$(getFileNameNoExt $LAST)
+
     # ------ PROCESS ------
 
 getFileName() {
@@ -513,17 +524,6 @@ nextPowerOf2() {
     ((v += 1));
     echo $v;
 }
-
-    if [ -e $WORKSPACE/archive/cm-*.zip ]
-        then
-          echo -e "Last zip not found"
-          cp $OUT/cm-*.zip $WORKSPACE/archive/
-          exit 1
-    fi
-
-    CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
-    LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
-    LAST_BASE=$(getFileNameNoExt $LAST)
 
     mkdir $WORKSPACE/work
     mkdir $WORKSPACE/out
