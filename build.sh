@@ -414,6 +414,7 @@ last_dir=$(pwd)
     KEY_PK8=$JENKINS_BUILD_DIR/build/target/product/security/platform.pk8
 
     #Tools
+    mkdir -p ${ANDROID_HOST_OUT}/opendelta
     if [ ! -e ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg ]; then
         mka unpackbootimg
     fi
@@ -422,15 +423,18 @@ last_dir=$(pwd)
     fi
 
     if [ ! -e ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar ]; then
-        mkdir -p ${ANDROID_HOST_OUT}/opendelta
+        echo "Get minsignapk"
         mkdir $WORKSPACE/temp
         cd $WORKSPACE/temp
         svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/server files
         cd files
-        cp *.jar $ANDROID_HOST_OUT/opendelta
+        cp minsignapk.jar $ANDROID_HOST_OUT/opendelta/minsignapk.jar
+        cp MinSignAPK.java $ANDROID_HOST_OUT/opendelta/MinSignAPK.java
+        echo "Done"
     fi
 
     if [ ! -e ${ANDROID_HOST_OUT}/opendelta/xdelta3 ]; then
+        echo "Building xdelta3"
         mkdir $WORKSPACE/temp
         cd $WORKSPACE/temp
         svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/jni install
@@ -439,15 +443,18 @@ last_dir=$(pwd)
         ./configure
         make
         cp xdelta3 ${ANDROID_HOST_OUT}/opendelta/xdelta3
+        echo "Done"
     fi
 
     if [ ! -e ${ANDROID_HOST_OUT}/opendelta/zipadjust ]; then
+        echo "Building zipadjust"
         cd $WORKSPACE/temp/install
         gcc -o zipadjust zipadjust.c zipadjust_run.c -lz
         cp zipadjust ${ANDROID_HOST_OUT}/opendelta/zipadjust
+        echo "Done"
     fi
 
-    # Clean
+    # Clean temp
     cd $last_dir
     rm -rf $WORKSPACE/temp
 
@@ -482,15 +489,15 @@ nextPowerOf2() {
     echo $v;
 }
 
+    if [ -e $WORKSPACE/archive/cm-*.zip ]; then
+        echo -e "$LAST not found"
+        cp $OUT/cm-*.zip $WORKSPACE/archive/
+        exit 1
+    fi
+
     CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
     LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
     LAST_BASE=$(getFileNameNoExt $LAST)
-
-if [ -e $WORKSPACE/archive/cm-*.zip ]; then
-    echo -e "$LAST not found"
-    cp $CURRENT $WORKSPACE/archive/
-    exit 1
-fi
 
     rm -rf work
     mkdir work
