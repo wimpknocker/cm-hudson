@@ -490,10 +490,13 @@ echo -e "$last_dir"
     mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE
     mkdir -p $DOWNLOAD_WIMPNETHER_NET_DELTAS
 
-    for f in $(ls $OUT/cm-*.zip*)
-    do
-      cp $f $WORKSPACE/archive/cm-*.zip*
-    done
+    if [ ! -e $WORKSPACE/archive/cm-*.zip ]
+        then
+          echo -e "Moving build to archive"
+          cp $OUT/cm-*.zip $WORKSPACE/archive/cm-*.zip
+          echo -e "Done"
+          exit 1
+    fi
 
     #Check zips
     if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
