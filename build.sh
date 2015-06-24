@@ -309,15 +309,15 @@ then
   IS_HTTP=$(echo $GERRIT_CHANGES | grep http)
   if [ -z "$IS_HTTP" ]
   then
-    python $WORKSPACE/hudson/repopick.py $GERRIT_CHANGES
+    python $WORKSPACE/cm-hudson/repopick.py $GERRIT_CHANGES
     check_result "gerrit picks failed."
   else
-    python $WORKSPACE/hudson/repopick.py $(curl $GERRIT_CHANGES)
+    python $WORKSPACE/cm-hudson/repopick.py $(curl $GERRIT_CHANGES)
     check_result "gerrit picks failed."
   fi
   if [ ! -z "$GERRIT_XLATION_LINT" ]
   then
-    python $WORKSPACE/hudson/xlationlint.py $GERRIT_CHANGES
+    python $WORKSPACE/cm-hudson/xlationlint.py $GERRIT_CHANGES
     check_result "basic XML lint failed."
   fi
 fi
