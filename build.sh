@@ -649,6 +649,16 @@ nextPowerOf2() {
       cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
     done
 
+    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.update*)
+    do
+      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
+    done
+
+    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.sign*)
+    do
+      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
+    done
+
     # /recovery
     if [ "$EXPORT_RECOVERY" = "true" -a -f $OUT/recovery.img ]
     then
