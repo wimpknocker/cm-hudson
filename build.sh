@@ -483,28 +483,26 @@ echo -e "$last_dir"
     cd $last_dir
     rm -rf $WORKSPACE/temp
 
+    #Ota Dirs
+    DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/full_builds/$DEVICE
+    DOWNLOAD_WIMPNETHER_NET_DELTAS=~/otabuilds/nightlies/$DEVICE
+
+    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE
+    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DELTAS
+
+    for f in $(ls $OUT/cm-*.zip*)
+    do
+      cp $f $WORKSPACE/archive/cm-*.zip*
+    done
+
     #Check zips
-    if [ ! -e $WORKSPACE/archive/cm-*.zip ]
+    if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
         then
           echo -e "Last zip not found"
           echo -e "Copying latest build to last zip"
-          cp $OUT/cm-*.zip $WORKSPACE/archive/
+          cp $WORKSPACE/archive/cm-*.zip $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip 
           echo -e "Done"
           exit 1
-    fi
-
-    CM_ZIP=
-    for f in $(ls $OUT/cm-*.zip)
-    do
-      CM_ZIP=$(basename $f)
-    done
-    if [ -f $WORKSPACE/archive/$CM_ZIP ]
-    then
-      echo "File $CM_ZIP exists on archive"
-      echo "Only 1 build is allowed for 1 device on 1 day"
-      make clobber >/dev/null
-      rm -fr $OUT
-      exit 1
     fi
 
 # ------ PROCESS ------
@@ -538,8 +536,8 @@ nextPowerOf2() {
     echo $v;
 }
 
-    CURRENT=$(getFileName $(ls -1 $OUT/cm-*.zip))
-    LAST=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
+    CURRENT=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
+    LAST=$(getFileName $(ls -1 $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip))
     LAST_BASE=$(getFileNameNoExt $LAST)
 
     mkdir $WORKSPACE/work
@@ -615,10 +613,6 @@ nextPowerOf2() {
     rm -rf $WORKSPACE/work
     rm -rf $WORKSPACE/out
 
-    #Ota Dirs
-    DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/full_builds/$DEVICE
-    DOWNLOAD_WIMPNETHER_NET_DELTAS=~/otabuilds/nightlies/$DEVICE
-
     if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
     then
       DOWNLOAD_WIMPNETHER_NET_DEVICE="$DOWNLOAD_WIMPNETHER_NET_DEVICE"
@@ -627,9 +621,6 @@ nextPowerOf2() {
       find $DOWNLOAD_WIMPNETHER_NET_DEVICE -name "cm*NIGHTLY*" -type f -mtime +63 -delete
       find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -type f -mtime +70 -delete
     fi
-
-    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE
-    mkdir -p $DOWNLOAD_WIMPNETHER_NET_DELTAS
 
     CM_ZIP=
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
@@ -649,10 +640,10 @@ nextPowerOf2() {
     cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt
 
     # /archive
-    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
-    do
-      cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
-    done
+#    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
+#    do
+#      cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
+#    done
 
     for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.delta*)
     do
