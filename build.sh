@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -x
 
 function check_result {
   if [ "0" -ne "$?" ]
@@ -558,7 +558,9 @@ nextPowerOf2() {
     mkdir $WORKSPACE/out
 
     $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
+    check_result "decompress current failed"
     $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
+    check_result "decompress last failed"
     $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip work/current_signed.zip
     $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip work/last_signed.zip
     SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current.zip));
