@@ -564,13 +564,11 @@ nextPowerOf2() {
 
     $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
     $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip work/current_signed.zip
-    check_result "signing current failed"
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip work/last_signed.zip
-    check_result "signing last failed"
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip $WORKSPACE/work/current_signed.zip
+    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip $WORKSPACE/work/last_signed.zip
     SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current.zip));
     $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/last.zip $WORKSPACE/work/current.zip $WORKSPACE/out/$LAST_BASE.update
-    SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current_signed.zip));
+    SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current_signed.zip));
     $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/current.zip $WORKSPACE/work/current_signed.zip $WORKSPACE/out/$LAST_BASE.sign
 
     MD5_CURRENT=$(getFileMD5 $CURRENT)
