@@ -494,8 +494,6 @@ echo -e "$last_dir"
         then
           echo -e "Moving build to archive"
           cp $OUT/cm-*.zip $WORKSPACE/archive/
-          echo -e "Done"
-          exit 1
     fi
 
     if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
@@ -505,6 +503,20 @@ echo -e "$last_dir"
           cp $WORKSPACE/archive/cm-*.zip $DOWNLOAD_WIMPNETHER_NET_DEVICE/
           echo -e "Done"
           exit 1
+    fi
+
+    CM_ZIP=
+    for f in $(ls $WORKSPACE/archive/cm-*.zip)
+    do
+      CM_ZIP=$(basename $f)
+    done
+    if [ -f $DOWNLOAD_WIMPNETHER_NET_DEVICE/$CM_ZIP ]
+    then
+      echo "File $CM_ZIP exists on download.wimpnether.net"
+      echo "Only 1 build is allowed for 1 device on 1 day"
+      make clobber >/dev/null
+      rm -fr $OUT
+      exit 1
     fi
 
 # ------ PROCESS ------
@@ -624,28 +636,8 @@ nextPowerOf2() {
       find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -type f -mtime +70 -delete
     fi
 
-    CM_ZIP=
-    for f in $(ls $WORKSPACE/archive/cm-*.zip)
-    do
-      CM_ZIP=$(basename $f)
-    done
-    if [ -f $DOWNLOAD_WIMPNETHER_NET_DEVICE/$CM_ZIP ]
-    then
-      echo "File $CM_ZIP exists on download.wimpnether.net"
-      echo "Only 1 build is allowed for 1 device on 1 day"
-      make clobber >/dev/null
-      rm -fr $OUT
-      exit 1
-    fi
-
     # changelog
     cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt
-
-    # /archive
-#    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
-#    do
-#      cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
-#    done
 
     for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.delta*)
     do
