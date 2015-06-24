@@ -430,8 +430,8 @@ echo -e "$last_dir"
     BIN_XDELTA=$ANDROID_HOST_OUT/opendelta/xdelta3
     BIN_ZIPADJUST=$ANDROID_HOST_OUT/opendelta/zipadjust
     # Sign Keys
-    KEY_X509=$JENKINS_BUILD_DIR/build/target/product/security/platform.x509.pem
-    KEY_PK8=$JENKINS_BUILD_DIR/build/target/product/security/platform.pk8
+    KEY_X509=$WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/platform.x509.pem
+    KEY_PK8=$WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/platform.pk8
 
     #Tools
     mkdir -p ${ANDROID_HOST_OUT}/opendelta
