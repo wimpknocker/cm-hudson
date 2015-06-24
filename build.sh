@@ -550,9 +550,9 @@ nextPowerOf2() {
     echo $v;
 }
 
-    CURRENT=$(getFileName $(ls -1 $WORKSPACE/archive/cm-*.zip))
-    LAST=$(getFileName $(ls -1 $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip))
-    LAST_BASE=$(getFileNameNoExt $LAST)
+    CURRENT=$(ls $WORKSPACE/archive/cm-*.zip)
+    LAST=$(ls $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip)
+    LAST_BASE=$(basename $LAST .zip)
 
     mkdir $WORKSPACE/work
     mkdir $WORKSPACE/out
@@ -563,11 +563,11 @@ nextPowerOf2() {
     echo -e "LAST_BASE"
 
     $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
-    check_result "decompress current failed"
     $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
-    check_result "decompress last failed"
     $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip work/current_signed.zip
+    check_result "signing current failed"
     $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip work/last_signed.zip
+    check_result "signing last failed"
     SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current.zip));
     $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/last.zip $WORKSPACE/work/current.zip $WORKSPACE/out/$LAST_BASE.update
     SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current_signed.zip));
