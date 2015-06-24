@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -x
+#!/usr/bin/env bash
 
 function check_result {
   if [ "0" -ne "$?" ]
