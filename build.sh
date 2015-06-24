@@ -493,17 +493,16 @@ echo -e "$last_dir"
     if [ ! -e $WORKSPACE/archive/cm-*.zip ]
         then
           echo -e "Moving build to archive"
-          cp $OUT/cm-*.zip $WORKSPACE/archive/cm-*.zip
+          cp $OUT/cm-*.zip $WORKSPACE/archive/
           echo -e "Done"
           exit 1
     fi
 
-    #Check zips
     if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
         then
           echo -e "Last zip not found"
           echo -e "Copying latest build to last zip"
-          cp $WORKSPACE/archive/cm-*.zip $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip 
+          cp $WORKSPACE/archive/cm-*.zip $DOWNLOAD_WIMPNETHER_NET_DEVICE/
           echo -e "Done"
           exit 1
     fi
