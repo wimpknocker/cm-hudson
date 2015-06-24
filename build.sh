@@ -557,6 +557,11 @@ nextPowerOf2() {
     mkdir $WORKSPACE/work
     mkdir $WORKSPACE/out
 
+#  Only test
+    echo -e "$CURRENT"
+    echo -e "$LAST"
+    echo -e "LAST_BASE"
+
     $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
     check_result "decompress current failed"
     $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
