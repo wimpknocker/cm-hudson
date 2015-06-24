@@ -483,11 +483,28 @@ echo -e "$last_dir"
     cd $last_dir
     rm -rf $WORKSPACE/temp
 
+    #Check zips
     if [ ! -e $WORKSPACE/archive/cm-*.zip ]
         then
           echo -e "Last zip not found"
+          echo -e "Copying latest build to last zip"
           cp $OUT/cm-*.zip $WORKSPACE/archive/
+          echo -e "Done"
           exit 1
+    fi
+
+    CM_ZIP=
+    for f in $(ls $OUT/cm-*.zip)
+    do
+      CM_ZIP=$(basename $f)
+    done
+    if [ -f $WORKSPACE/archive/$CM_ZIP ]
+    then
+      echo "File $CM_ZIP exists on archive"
+      echo "Only 1 build is allowed for 1 device on 1 day"
+      make clobber >/dev/null
+      rm -fr $OUT
+      exit 1
     fi
 
 # ------ PROCESS ------
