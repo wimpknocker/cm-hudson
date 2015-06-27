@@ -267,7 +267,7 @@ then
     mkdir -p $WORKSPACE/patches #Add patches here
     if [ -n "$GETFROMGIT" ] # Get patches from git, use https://github.com/USER/REPO/branches/BRANCH/subdir/you/want
     then
-        svn checkout $GETFROMGIT $WORKSPACE/patches/$REPO_BRANCH # Get only needed dir
+        svn checkout $GETFROMGIT $WORKSPACE/patches/$REPO_BRANCH
     fi
     $WORKSPACE/cm-hudson/patcher.sh
 fi
