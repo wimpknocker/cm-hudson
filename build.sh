@@ -102,6 +102,15 @@ if [ -z "$SYNC_PROTO" ]
 then
   SYNC_PROTO=git
 fi
+if [ -z "$PATCHER_CLEAN" ]
+then
+  PATCHER_CLEAN=false
+fi
+
+if [ -z "$PATCHER_SH" ]
+then
+ PATCHER_SH=false
+fi
 
 if [ -z "$SIGN_BUILD" ]
 then
@@ -238,6 +247,23 @@ if [ -f $WORKSPACE/patches.txt ]; then
         python $JENKINS_BUILD_DIR/build/tools/repopick.py $GERRIT_CHANGES --ignore-missing --start-branch auto --abandon-first
         echo -e "${txtgrn}Patches applied!${txtrst}"
     fi
+fi
+
+# Clean patches from dir
+if [ "$PATCHES_CLEAN" = "true" ]
+then
+    rm -rf $WORKSPACE/patches/*
+fi
+
+# Apply patches from dir
+if [ "$PATCHER_SH" = "true" ]
+then
+    mkdir -p $WORKSPACE/patches #Add patches here
+    if [ -n "$GETFROMGIT" ]
+    then
+        git clone $GETFROMGIT -b $REPO_BRANCH --single-branch $WORKSPACE/patches/$REPO_BRANCH
+    fi
+    $WORKSPACE/cm-hudson/patcher.sh
 fi
 
 # Update-client
@@ -494,6 +520,7 @@ echo -e "$last_dir"
         then
           echo -e "Moving build to archive"
           cp $OUT/cm-*.zip $WORKSPACE/archive/
+          echo -e "Done"
     fi
 
     if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
@@ -634,15 +661,18 @@ nextPowerOf2() {
 
     if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
     then
-      DOWNLOAD_WIMPNETHER_NET_DEVICE="$DOWNLOAD_WIMPNETHER_NET_DEVICE"
+      for f in $(ls $WORKSPACE/archive/cm-*.zip*)
+      do
+        cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
+      done
+      md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
+      cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt # Changelog
+      cp $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum $DOWNLOAD_WIMPNETHER_NET_DEVICE/
     else
       # Remove older nightlies and deltas
-      find $DOWNLOAD_WIMPNETHER_NET_DEVICE -name "cm*NIGHTLY*" -type f -mtime +63 -delete
+      find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "cm*NIGHTLY*" -type f -mtime +63 -delete
       find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -type f -mtime +70 -delete
     fi
-
-    # changelog
-    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt
 
     for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.delta*)
     do
@@ -659,12 +689,6 @@ nextPowerOf2() {
       cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
     done
 
-    # /recovery
-    if [ "$EXPORT_RECOVERY" = "true" -a -f $OUT/recovery.img ]
-    then
-      cp $OUT/recovery.img $DOWNLOAD_WIMPNETHER_NET_DEVICE/recovery/recovery-$DEVICE.img
-    fi
-
   else
     echo "Unable to find target files to sign"
     exit 1
@@ -675,16 +699,6 @@ else
   do
     ln $f $WORKSPACE/archive/$(basename $f)
   done
-fi
-
-if [ -f $OUT/utilties/update.zip ]
-then
-  cp $OUT/utilties/update.zip $WORKSPACE/archive/recovery.zip
-fi
-if [ -f $OUT/recovery.img ]
-then
-  cp $OUT/recovery.img $WORKSPACE/archive
-
 fi
 
 # archive the build.prop as well
