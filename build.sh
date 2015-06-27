@@ -249,19 +249,25 @@ if [ -f $WORKSPACE/patches.txt ]; then
     fi
 fi
 
-# Clean patches from dir
+# Clean patches
 if [ "$PATCHES_CLEAN" = "true" ]
 then
-    rm -rf $WORKSPACE/patches/*
+    $WORKSPACE/cm-hudson/patchclean.sh
+fi
+
+if [ "$PATCHES_CLEAN" = "full" ]
+then
+    $WORKSPACE/cm-hudson/patchclean.sh
+    rm -rf $WORKSPACE/patches/$REPO_BRANCH
 fi
 
 # Apply patches from dir
 if [ "$PATCHER_SH" = "true" ]
 then
     mkdir -p $WORKSPACE/patches #Add patches here
-    if [ -n "$GETFROMGIT" ]
+    if [ -n "$GETFROMGIT" ] # Get patches from git
     then
-        git clone $GETFROMGIT -b $REPO_BRANCH --single-branch $WORKSPACE/patches/$REPO_BRANCH
+        svn checkout $GETFROMGIT $WORKSPACE/patches/$REPO_BRANCH # Get only needed dir
     fi
     $WORKSPACE/cm-hudson/patcher.sh
 fi

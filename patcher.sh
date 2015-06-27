@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 PATCHDIR=$WORKSPACE/patches/$REPO_BRANCH
 PATCHTO=$WORKSPACE/$JENKINS_BUILD_DIR
