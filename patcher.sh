@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PATCHDIR=$WORKSPACE/patches/$REPO_BRANCH
-PATCHTO=$WORKSPACE/$JENKINS_BUILD_DIR
+PATCHTO=$WORKSPACE/$REPO_BRANCH
 UNATTENDED=${1}
 
 echo $PATCHTO
@@ -15,7 +15,7 @@ do
     PATCH=$PATCHDIR/$LINE
     REPO=$(dirname $LINE)
     echo "repo = $REPO"
-    cd $PATCHDIR
+    cd $PATCHTO
     cd $REPO
     RESULT=$(patch -p1 --no-backup-if-mismatch < $PATCH)
     echo -e "${RESULT}"
@@ -61,7 +61,7 @@ do
     PATCH=$PATCHDIR/$LINE
     REPO=$(dirname $LINE)
     echo "repo = $REPO"
-    cd $PATCHDIR
+    cd $PATCHTO
     cd $REPO
     RESULT=$(git apply --whitespace=nowarm -v $PATCH 2>$1)
     echo -e "${RESULT}"

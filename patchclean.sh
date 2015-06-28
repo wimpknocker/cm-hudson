@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 PATCHDIR=$WORKSPACE/patches/$REPO_BRANCH
-PATCHTO=$WORKSPACE/$JENKINS_BUILD_DIR
+PATCHTO=$WORKSPACE/$REPO_BRANCH
 UNATTENDED=${1}
 
-echo $PATCHDIR
-cd $PATCHDIR
+echo $PATCHTO
+cd $PATCHTO
 for LINE in $(echo $(find -name *.patch); echo $(find -name *.apply))
 do
   if [[ $UNATTENDED -ne 1 ]]; then
@@ -14,7 +14,7 @@ do
   echo "clearing = $LINE"
   REPO=$(dirname $LINE)
   echo "repo = $PATCHDIR$REPO"
-  cd $PATCHDIR
+  cd $PATCHTO
   cd $REPO
   git add .
   git stash
