@@ -453,90 +453,55 @@ then
         export MINIGZIP="$minigzip"
     fi
 
-#Only test
-last_dir=$(pwd)
-echo -e "$last_dir"
+    OTASCRIPT=$(get_meta_val "ota_script_path")
 
-    BIN_JAVA=java
-    BIN_MINSIGNAPK=$ANDROID_HOST_OUT/opendelta/minsignapk.jar
-    BIN_XDELTA=$ANDROID_HOST_OUT/opendelta/xdelta3
-    BIN_ZIPADJUST=$ANDROID_HOST_OUT/opendelta/zipadjust
-    # Sign Keys
-    KEY_X509=$WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/platform.x509.pem
-    KEY_PK8=$WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/platform.pk8
-
-    #Tools
-    mkdir -p ${ANDROID_HOST_OUT}/opendelta
-    check_result "unable make ${ANDROID_HOST_OUT}/opendelta dir"
-
-    if [ ! -e ${ANDROID_HOST_OUT}/linux-x86/bin/unpackbootimg ]; then
-        mka unpackbootimg
-    fi
-    if [ ! -e ${ANDROID_PRODUCT_OUT}/obj/EXECUTABLES/updater_intermediates/updater ]; then
-        mka updater
+    override_device=$(get_meta_val "override_device")
+    if [ ! -z "$override_device" ]
+    then
+        OTASCRIPT="$OTASCRIPT --override_device=$override_device"
     fi
 
-    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/minsignapk.jar ]; then
-        echo "Get minsignapk"
-        mkdir $WORKSPACE/temp
-        cd $WORKSPACE/temp
-        svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/server files
-        check_result "Get minsignapk failed"
-        cd files
-        cp minsignapk.jar $ANDROID_HOST_OUT/opendelta/minsignapk.jar
-        cp MinSignAPK.java $ANDROID_HOST_OUT/opendelta/MinSignAPK.java
-        echo "Done"
+    extras_file=$(get_meta_val "extras_file")
+    if [ ! -z "$extras_file" ]
+    then
+        OTASCRIPT="$OTASCRIPT --extras_file=$extras_file"
     fi
 
-    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/xdelta3 ]; then
-        echo "Building xdelta3"
-        mkdir $WORKSPACE/temp
-        cd $WORKSPACE/temp
-        svn checkout https://github.com/omnirom/android_packages_apps_OpenDelta/trunk/jni install
-        cd install/xdelta3-3.0.7
-        chmod +x configure
-        ./configure
-        make
-        check_result "xdelta3 build failed"
-        cp xdelta3 ${ANDROID_HOST_OUT}/opendelta/xdelta3
-        echo "Done"
+    no_separate_recovery=$(get_meta_val "no_separate_recovery")
+    if [ ! -z "$no_separate_recovery" -a "$no_separate_recovery" = "true" ]
+    then
+        OTASCRIPT="$OTASCRIPT --no_separate_recovery=true"
     fi
 
-    if [ ! -e ${ANDROID_HOST_OUT}/opendelta/zipadjust ]; then
-        echo "Building zipadjust"
-        cd $WORKSPACE/temp/install
-        gcc -o zipadjust zipadjust.c zipadjust_run.c -lz
-        check_result "zipadjust build failed"
-        cp zipadjust ${ANDROID_HOST_OUT}/opendelta/zipadjust
-        echo "Done"
+    if [ -z "$WITH_GMS" -o "$WITH_GMS" = "false" ]
+    then
+        OTASCRIPT="$OTASCRIPT --backup=true"
     fi
 
-    # Clean temp
-    cd $last_dir
-    rm -rf $WORKSPACE/temp
+    ./build/tools/releasetools/sign_target_files_apks -e Term.apk= -d  $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $OTASCRIPT -k $WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
+    md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
 
-    #Ota Dirs
-    DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/full_builds/$DEVICE
-    DOWNLOAD_WIMPNETHER_NET_DELTAS=~/otabuilds/nightlies/$DEVICE
-
+    # file name conflict
+    function getFileName() {
+	echo ${1##*/}
+    }
+    DOWNLOAD_WIMPNETHER_NET_DEVICE=~/otabuilds/_builds/$DEVICE
+    DOWNLOAD_WIMPNETHER_NET_DELTAS=~/otabuilds/_deltas/$DEVICE
+    DOWNLOAD_WIMPNETHER_NET_LAST=~/otabuilds/_last/$SDKVERSION/$DEVICE
+    if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
+    then
+      DOWNLOAD_WIMPNETHER_NET_DEVICE="$DOWNLOAD_WIMPNETHER_NET_DEVICE/stable"
+      DOWNLOAD_WIMPNETHER_NET_DELTAS="$DOWNLOAD_WIMPNETHER_NET_DELTAS/stable"
+      DOWNLOAD_WIMPNETHER_NET_LAST="$DOWNLOAD_WIMPNETHER_NET_LAST/stable"
+    else
+      # Remove older nightlies and deltas
+      find $DOWNLOAD_WIMPNETHER_NET_DEVICE -name "cm*NIGHTLY*" -not -path "*/stable/*" -type f -mtime +63 -delete
+      find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -not -path "*/stable/*" -type f -mtime +70 -delete
+    fi
     mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE
     mkdir -p $DOWNLOAD_WIMPNETHER_NET_DELTAS
-
-    if [ ! -e $WORKSPACE/archive/cm-*.zip ]
-        then
-          echo -e "Moving build to archive"
-          cp $OUT/cm-*.zip $WORKSPACE/archive/
-          echo -e "Done"
-    fi
-
-    if [ ! -e $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip ]
-        then
-          echo -e "Last zip not found"
-          echo -e "Copying latest build to last zip"
-          cp $WORKSPACE/archive/cm-*.zip $DOWNLOAD_WIMPNETHER_NET_DEVICE/
-          echo -e "Done"
-          exit 1
-    fi
+    mkdir -p $DOWNLOAD_WIMPNETHER_NET_LAST
 
     CM_ZIP=
     for f in $(ls $WORKSPACE/archive/cm-*.zip)
@@ -552,147 +517,34 @@ echo -e "$last_dir"
       exit 1
     fi
 
-# ------ PROCESS ------
+    # changelog
+    cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt
 
-getFileName() {
-	echo ${1##*/}
-    }
-
-getFileNameNoExt() {
-	echo ${1%.*}
-}
-
-getFileMD5() {
-	TEMP=$(md5sum -b $1)
-	for T in $TEMP; do echo $T; break; done
-}
-
-getFileSize() {
-	echo $(stat --print "%s" $1)
-}
-
-nextPowerOf2() {
-    local v=$1;
-    ((v -= 1));
-    ((v |= $v >> 1));
-    ((v |= $v >> 2));
-    ((v |= $v >> 4));
-    ((v |= $v >> 8));
-    ((v |= $v >> 16));
-    ((v += 1));
-    echo $v;
-}
-
-    CURRENT=$(ls $WORKSPACE/archive/cm-*.zip)
-    LAST=$(ls $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-*.zip)
-    LAST_BASE=$(basename $LAST .zip)
-
-    mkdir $WORKSPACE/work
-    mkdir $WORKSPACE/out
-
-#  Only test
-    echo -e "$CURRENT"
-    echo -e "$LAST"
-    echo -e "LAST_BASE"
-
-    $BIN_ZIPADJUST --decompress $CURRENT $WORKSPACE/work/current.zip
-    $BIN_ZIPADJUST --decompress $LAST $WORKSPACE/work/last.zip
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/current.zip $WORKSPACE/work/current_signed.zip
-    $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 $WORKSPACE/work/last.zip $WORKSPACE/work/last_signed.zip
-    SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current.zip));
-    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/last.zip $WORKSPACE/work/current.zip $WORKSPACE/out/$LAST_BASE.update
-    SRC_BUFF=$(nextPowerOf2 $(getFileSize $WORKSPACE/work/current_signed.zip));
-    $BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s $WORKSPACE/work/current.zip $WORKSPACE/work/current_signed.zip $WORKSPACE/out/$LAST_BASE.sign
-
-    MD5_CURRENT=$(getFileMD5 $CURRENT)
-    MD5_CURRENT_STORE=$(getFileMD5 $WORKSPACE/work/current.zip)
-    MD5_CURRENT_STORE_SIGNED=$(getFileMD5 $WORKSPACE/work/current_signed.zip)
-    MD5_LAST=$(getFileMD5 $LAST)
-    MD5_LAST_STORE=$(getFileMD5 $WORKSPACE/work/last.zip)
-    MD5_LAST_STORE_SIGNED=$(getFileMD5 $WORKSPACE/work/last_signed.zip)
-    MD5_UPDATE=$(getFileMD5 $WORKSPACE/out/$LAST_BASE.update)
-    MD5_SIGN=$(getFileMD5 $WORKSPACE/out/$LAST_BASE.sign)
-
-    SIZE_CURRENT=$(getFileSize $CURRENT)
-    SIZE_CURRENT_STORE=$(getFileSize $WORKSPACE/work/current.zip)
-    SIZE_CURRENT_STORE_SIGNED=$(getFileSize $WORKSPACE/work/current_signed.zip)
-    SIZE_LAST=$(getFileSize $LAST)
-    SIZE_LAST_STORE=$(getFileSize $WORKSPACE/work/last.zip)
-    SIZE_LAST_STORE_SIGNED=$(getFileSize $WORKSPACE/work/last_signed.zip)
-    SIZE_UPDATE=$(getFileSize $WORKSPACE/out/$LAST_BASE.update)
-    SIZE_SIGN=$(getFileSize $WORKSPACE/out/$LAST_BASE.sign)
-
-    DELTA=$WORKSPACE/out/$LAST_BASE.delta
-
-    echo "{" > $DELTA
-    echo "  \"version\": 1," >> $DELTA
-    echo "  \"in\": {" >> $DELTA
-    echo "      \"name\": \"$FILE_LAST\"," >> $DELTA
-    echo "      \"size_store\": $SIZE_LAST_STORE," >> $DELTA
-    echo "      \"size_store_signed\": $SIZE_LAST_STORE_SIGNED," >> $DELTA
-    echo "      \"size_official\": $SIZE_LAST," >> $DELTA
-    echo "      \"md5_store\": \"$MD5_LAST_STORE\"," >> $DELTA
-    echo "      \"md5_store_signed\": \"$MD5_LAST_STORE_SIGNED\"," >> $DELTA
-    echo "      \"md5_official\": \"$MD5_LAST\"" >> $DELTA
-    echo "  }," >> $DELTA
-    echo "  \"update\": {" >> $DELTA
-    echo "      \"name\": \"$FILE_LAST_BASE.update\"," >> $DELTA
-    echo "      \"size\": $SIZE_UPDATE," >> $DELTA
-    echo "      \"size_applied\": $SIZE_CURRENT_STORE," >> $DELTA
-    echo "      \"md5\": \"$MD5_UPDATE\"," >> $DELTA
-    echo "      \"md5_applied\": \"$MD5_CURRENT_STORE\"" >> $DELTA
-    echo "  }," >> $DELTA
-    echo "  \"signature\": {" >> $DELTA
-    echo "      \"name\": \"$FILE_LAST_BASE.sign\"," >> $DELTA
-    echo "      \"size\": $SIZE_SIGN," >> $DELTA
-    echo "      \"size_applied\": $SIZE_CURRENT_STORE_SIGNED," >> $DELTA
-    echo "      \"md5\": \"$MD5_SIGN\"," >> $DELTA
-    echo "      \"md5_applied\": \"$MD5_CURRENT_STORE_SIGNED\"" >> $DELTA
-    echo "  }," >> $DELTA
-    echo "  \"out\": {" >> $DELTA
-    echo "      \"name\": \"$FILE_CURRENT\"," >> $DELTA
-    echo "      \"size_store\": $SIZE_CURRENT_STORE," >> $DELTA
-    echo "      \"size_store_signed\": $SIZE_CURRENT_STORE_SIGNED," >> $DELTA
-    echo "      \"size_official\": $SIZE_CURRENT," >> $DELTA
-    echo "      \"md5_store\": \"$MD5_CURRENT_STORE\"," >> $DELTA
-    echo "      \"md5_store_signed\": \"$MD5_CURRENT_STORE_SIGNED\"," >> $DELTA
-    echo "      \"md5_official\": \"$MD5_CURRENT\"" >> $DELTA
-    echo "  }" >> $DELTA
-    echo "}" >> $DELTA
-
-    cp $WORKSPACE/out/* $WORKSPACE/archive/delta/.
-
-    rm -rf $WORKSPACE/work
-    rm -rf $WORKSPACE/out
-
-    if [ "$RELEASE_TYPE" = "CM_RELEASE" ]
+    # incremental
+    if [ "$FORCE_FULL_OTA" = "true" ]
     then
-      for f in $(ls $WORKSPACE/archive/cm-*.zip*)
-      do
-        cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
-      done
-      md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
-      cp $WORKSPACE/archive/CHANGES.txt $DOWNLOAD_WIMPNETHER_NET_DEVICE/cm-$MODVERSION.txt # Changelog
-      cp $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum $DOWNLOAD_WIMPNETHER_NET_DEVICE/
-    else
-      # Remove older nightlies and deltas
-      find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "cm*NIGHTLY*" -type f -mtime +63 -delete
-      find $DOWNLOAD_WIMPNETHER_NET_DELTAS -name "incremental-*" -type f -mtime +70 -delete
+      rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/*.zip
+      rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber
     fi
+    FILE_MATCH_intermediates=*.zip
+    FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_MATCH_intermediates))
+    if [ "$FILE_LAST_intermediates" != "" ]; then
+      OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_LAST_intermediates"
+      LAST_BUILD_NUMBER=$(cat $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber)
+      $OTASCRIPT -k $WORKSPACE/$JENKINS_BUILD_DIR/build/target/product/security/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      md5sum $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
+    fi
+    rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/*.zip
+    rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber
+    cp $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_LAST/$MODVERSION-signed-intermediate.zip
+    echo $BUILD_NUMBER > $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber
 
-    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.delta*)
-    do
-      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
-    done
+    unset MINIGZIP
 
-    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.update*)
+    # /archive
+    for f in $(ls $WORKSPACE/archive/cm-*.zip*)
     do
-      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
-    done
-
-    for f in $(ls $WORKSPACE/archive/delta/$LAST_BASE.sign*)
-    do
-      cp $f $DOWNLOAD_WIMPNETHER_NET_DELTAS
+      cp $f $DOWNLOAD_WIMPNETHER_NET_DEVICE
     done
 
   else

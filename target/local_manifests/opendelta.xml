@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-  <manifest>
-      <project-remove name="CyanogenMod/android_packages_apps_CMUpdater" />
-      <project name="omnirom/android_packages_apps_OpenDelta" path="packages/apps/OpenDelta" revision="android-4.4" />
-  </manifest>
