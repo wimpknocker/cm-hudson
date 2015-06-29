@@ -38,6 +38,11 @@ then
   exit 1
 fi
 
+if [ -z "$REPO_SYNC" ]
+then
+  REPO_SYNC=true
+fi
+
 if [ ! -z "$GERRIT_PROJECT" ]
 then
   export RELEASE_TYPE=CM_EXPERIMENTAL
@@ -217,6 +222,8 @@ then
   . ~/.jenkins_profile
 fi
 
+if [ "$REPO_SYNC" = "true" ]; then
+
 mkdir -p .repo/local_manifests
 rm -f .repo/local_manifest.xml
 
@@ -235,6 +242,7 @@ check_result "repo sync failed.", true
 
 # SUCCESS
 echo Sync complete.
+fi
 
 # Apply gerrit changes from patches.txt. One change-id per line!
 if [ -f $WORKSPACE/patches.txt ]; then
