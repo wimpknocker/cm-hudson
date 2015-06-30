@@ -461,7 +461,7 @@ then
         export MINIGZIP="$minigzip"
     fi
 
-    OTASCRIPT=$($WORKSPACE/$REPO_BRANCH/build/tools/releasetools/ota_from_target_files)
+    OTASCRIPT=$(get_meta_val "ota_script_path")
 
     override_device=$(get_meta_val "override_device")
     if [ ! -z "$override_device" ]
@@ -486,7 +486,7 @@ then
         OTASCRIPT="$OTASCRIPT --backup=true"
     fi
 
-    $WORKSPACE/$REPO_BRANCH/build/tools/releasetools/sign_target_files_apks -e Term.apk= -d  $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $WORKSPACE/$REPO_BRANCH/build/tools/releasetools/sign_target_files_apks -e Term.apk= $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
     $OTASCRIPT  $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
     md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
 
