@@ -122,6 +122,11 @@ then
   SIGN_BUILD=false
 fi
 
+if [ -z "$FORCE_FULL_OTA" ]
+then
+  FORCE_FULL_OTA=false
+fi
+
 # colorization fix in Jenkins
 export CL_RED="\"\033[31m\""
 export CL_GRN="\"\033[32m\""
@@ -487,7 +492,7 @@ then
     fi
 
     $WORKSPACE/$REPO_BRANCH/build/tools/releasetools/sign_target_files_apks -e Term.apk= $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
-    $OTASCRIPT  $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
+    $OTASCRIPT $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
     md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
 
     # file name conflict
