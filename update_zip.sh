@@ -223,7 +223,8 @@ case "$EXTRABUILD" in
 
         export RECOVERY_VARIANT=philz
 
-        time mka ${ANDROID_PRODUCT_OUT}/blackhawk-recovery.img
+        mka recoveryimage
+        mv ${ANDROID_PRODUCT_OUT}/recovery.img ${ANDROID_PRODUCT_OUT}/blackhawk-recovery.img
         if [ ! -e ${ANDROID_PRODUCT_OUT}/obj/EXECUTABLES/updater_intermediates/updater ]; then
             mka updater
         fi
