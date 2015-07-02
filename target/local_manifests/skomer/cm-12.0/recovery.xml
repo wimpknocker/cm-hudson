@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <manifest>
+      <project path="bootable/recovery-philz" name="wimpknocker/philz_touch_cwm6" remote="github" revision="cm-11.0-dual-boot-f2fs" />
+  </manifest>

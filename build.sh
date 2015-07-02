@@ -232,7 +232,8 @@ if [ "$REPO_SYNC" = "true" ]; then
 mkdir -p .repo/local_manifests
 rm -f .repo/local_manifest.xml
 
-cp $WORKSPACE/cm-hudson/target/local_manifests/*.xml .repo/local_manifests/
+# include local_manifests
+cp $WORKSPACE/cm-hudson/target/local_manifests/$DEVICE/$REPO_BRANCH/*.xml .repo/local_manifests/
 
 echo Core Manifest:
 cat .repo/manifest.xml
