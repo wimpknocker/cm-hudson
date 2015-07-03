@@ -251,7 +251,7 @@ echo Sync complete.
 fi
 
 # Apply gerrit changes from patches.txt. One change-id per line!
-if [ -f $WORKSPACE/patches.txt ]; then
+if [ -f $WORKSPACE/patches/$REPO_BRANCH/patches.txt ]; then
     while read line; do
         GERRIT_CHANGES+="$line "
     done < patches.txt
