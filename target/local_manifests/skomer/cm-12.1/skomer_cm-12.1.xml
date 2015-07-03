@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <manifest>
+      <project name="wimpknocker/android_device_samsung_skomer" path="device/samsung/skomer" revision="cm-12.0" />
+      <project name="wimpknocker/android_kernel_samsung_skomer" path="kernel/samsung/skomer" revision="blackhawk-selinux-disabled" />
+      <project name="wimpknocker/android_vendor_samsung_skomer" path="vendor/samsung/skomer" revision="cm-11.0" />
+  </manifest>

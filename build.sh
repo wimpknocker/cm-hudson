@@ -117,6 +117,11 @@ then
  PATCHER_SH=false
 fi
 
+if [ -z "$patches_e610" ]
+then
+   patches_e610=false
+fi
+
 if [ -z "$SIGN_BUILD" ]
 then
   SIGN_BUILD=false
@@ -273,6 +278,12 @@ if [ "$PATCHES_CLEAN" = "full" ]
 then
     $WORKSPACE/cm-hudson/patchclean.sh
     rm -rf $WORKSPACE/patches/$REPO_BRANCH
+fi
+
+# TEST paches for device lg e610
+if [ "$patches_e610" = "true" ]
+then
+   $WORKSPACE/cm-hudson/patches_e610.sh
 fi
 
 # Apply patches from dir
