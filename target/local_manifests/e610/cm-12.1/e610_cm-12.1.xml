@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
  <remove-project name="CyanogenMod/android_build" />
- <remove-project name="CyanogenMod/android_packages_apps_CMUpdater" />
  <remove-project name="CyanogenMod/android_frameworks_av" />
 <!-- display-caf -->
    <project name="msm7x27a/android_hardware_qcom_display" path="hardware/qcom/display-caf/msm7x27a" revision="cm-12.1-caf-msm7x27a" />
