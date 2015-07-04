@@ -90,6 +90,8 @@ then
 fi
 
 DEVICE=$(echo $LUNCH | sed s#cm_##g | sed s#-userdebug##g | sed s#-eng##g)
+#export DEVICE patch need that
+export DEVICE=$DEVICE
 
 if [ -z "$CLEAN" ]
 then
