@@ -272,16 +272,16 @@ fi
 if [ "$PATCHES_CLEAN" = "full" ]
 then
     $WORKSPACE/cm-hudson/patchclean.sh
-    rm -rf $WORKSPACE/patches/$REPO_BRANCH
+    rm -rf $WORKSPACE/patches/$REPO_BRANCH/$DEVICE
 fi
 
 # Apply patches from dir
 if [ "$PATCHER_SH" = "true" ]
 then
-    mkdir -p $WORKSPACE/patches #Add patches here
+    mkdir -p $WORKSPACE/patches/$REPO_BRANCH/$DEVICE #Add patches here
     if [ -n "$GETFROMGIT" ] # Get patches from git, use https://github.com/USER/REPO/branches/BRANCH/subdir/you/want
     then
-        svn checkout $GETFROMGIT $WORKSPACE/patches/$REPO_BRANCH
+        svn checkout $GETFROMGIT $WORKSPACE/patches/$REPO_BRANCH/$DEVICE
     fi
     $WORKSPACE/cm-hudson/patcher.sh
 fi
