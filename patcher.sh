@@ -4,7 +4,9 @@ PATCHDIR=$WORKSPACE/patches/$REPO_BRANCH/$DEVICE
 PATCHTO=$WORKSPACE/$REPO_BRANCH
 UNATTENDED=${1}
 
+echo $PATCHDIR
 echo $PATCHTO
+
 cd $PATCHDIR
 for LINE in $(find -name *.patch | sort )
 do
