@@ -455,6 +455,16 @@ fi
 
 if [ "$SIGN_BUILD" = "true" ]
 then
+  rm -rf $WORKSPACE/$REPO_BRANCH/build_env
+  # Getting keys...
+  git clone git@github.com:wimpknocker/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
+  if [ -d "$WORKSPACE/$REPO_BRANCH/build_env/keys" ]
+  then
+    export OTA_PACKAGE_SIGNING_KEY=build_env/keys/platform
+    export DEFAULT_SYSTEM_DEV_CERTIFICATE=build_env/keys/releasekey
+    export OTA_PACKAGE_SIGNING_DIR=build_env/keys
+  fi
+
   MODVERSION=$(cat $OUT/system/build.prop | grep ro.cm.version | cut -d = -f 2)
   SDKVERSION=$(cat $OUT/system/build.prop | grep ro.build.version.sdk | cut -d = -f 2)
   if [ ! -z "$MODVERSION" -a -f $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip ]
@@ -494,8 +504,8 @@ then
         OTASCRIPT="$OTASCRIPT --backup=true"
     fi
 
-    $WORKSPACE/$REPO_BRANCH/build/tools/releasetools/sign_target_files_apks -e Term.apk= $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
-    $OTASCRIPT $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
+    $WORKSPACE/$REPO_BRANCH/build/tools/releasetools/sign_target_files_apks -e Term.apk= -d $OTA_PACKAGE_SIGNING_DIR $OUT/obj/PACKAGING/target_files_intermediates/$TARGET_PRODUCT-target_files-$BUILD_NUMBER.zip $OUT/$MODVERSION-signed-intermediate.zip
+    $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $WORKSPACE/archive/cm-$MODVERSION.zip
     md5sum $WORKSPACE/archive/cm-$MODVERSION.zip > $WORKSPACE/archive/cm-$MODVERSION.zip.md5sum
 
     # file name conflict
@@ -547,7 +557,7 @@ then
     if [ "$FILE_LAST_intermediates" != "" ]; then
       OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_LAST_intermediates"
       LAST_BUILD_NUMBER=$(cat $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber)
-      $OTASCRIPT $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
       md5sum $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
     fi
     rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/*.zip
