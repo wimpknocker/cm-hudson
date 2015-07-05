@@ -437,7 +437,7 @@ case "$JOB_NAME" in
     ;;
 
     *)
-        time mka -j2 bacon #checkapi
+        time make -j2 bacon #checkapi
     ;;
 
 esac
