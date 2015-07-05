@@ -457,7 +457,7 @@ if [ "$SIGN_BUILD" = "true" ]
 then
   rm -rf $WORKSPACE/$REPO_BRANCH/build_env
   # Getting keys...
-  git clone git@github.com:wimpknocker/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
+  git clone https://github.com/wimpknocker/build_env.git $WORKSPACE/$REPO_BRANCH/build_env -b master
   if [ -d "$WORKSPACE/$REPO_BRANCH/build_env/keys" ]
   then
     export OTA_PACKAGE_SIGNING_KEY=build_env/keys/platform
