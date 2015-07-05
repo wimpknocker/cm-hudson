@@ -479,7 +479,7 @@ then
         export MINIGZIP="$minigzip"
     fi
 
-    OTASCRIPT=$(get_meta_val "ota_script_path")
+    OTASCRIPT=$WORKSPACE/$REPO_BRANCH/build/tools/releasetools/ota_from_target_files
 
     override_device=$(get_meta_val "override_device")
     if [ ! -z "$override_device" ]
