@@ -95,8 +95,7 @@ export DEVICE=$DEVICE
 
 if [ -z "$CLEAN" ]
 then
-  echo CLEAN not specified
-  exit 1
+  CLEAN=false
 fi
 
 if [ -z "$RELEASE_TYPE" ]
@@ -555,9 +554,9 @@ then
     FILE_MATCH_intermediates=*.zip
     FILE_LAST_intermediates=$(getFileName $(ls -1 $DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_MATCH_intermediates))
     if [ "$FILE_LAST_intermediates" != "" ]; then
-      OTASCRIPT="$OTASCRIPT --incremental_from=$DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_LAST_intermediates"
+      OTASCRIPT=$WORKSPACE/$REPO_BRANCH/build/tools/releasetools/ota_from_target_files
       LAST_BUILD_NUMBER=$(cat $DOWNLOAD_WIMPNETHER_NET_LAST/buildnumber)
-      $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
+      $OTASCRIPT -k $OTA_PACKAGE_SIGNING_DIR/releasekey -i $DOWNLOAD_WIMPNETHER_NET_LAST/$FILE_LAST_intermediates $OUT/$MODVERSION-signed-intermediate.zip $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip
       md5sum $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip > $DOWNLOAD_WIMPNETHER_NET_DELTAS/incremental-$LAST_BUILD_NUMBER-$BUILD_NUMBER.zip.md5sum
     fi
     rm -rf $DOWNLOAD_WIMPNETHER_NET_LAST/*.zip
