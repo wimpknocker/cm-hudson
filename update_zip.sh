@@ -3,13 +3,10 @@
 EXTRABUILD=$1
 #modver=""
 
+# Setup Dirs
 DOWNLOAD_WIMPNETHER_NET_DEVICE_KERNEL=~/otabuilds/_builds/$DEVICE/kernel
 DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY=~/otabuilds/_builds/$DEVICE/recovery
 DOWNLOAD_WIMPNETHER_NET_DEVICE_BLACKHAWK=~/otabuilds/_builds/$DEVICE/blackhawk
-
-mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_KERNEL
-mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY
-mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_BLACKHAWK
 
 # create kernel zip
 create_kernel_zip()
@@ -171,6 +168,7 @@ case "$EXTRABUILD" in
         if [ ! -e ${ANDROID_HOST_OUT}/framework/signapk.jar ]; then
             mka signapk
         fi
+        mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_KERNEL
         create_kernel_zip
         ;;
 
@@ -195,7 +193,7 @@ case "$EXTRABUILD" in
         if [ ! -e ${ANDROID_HOST_OUT}/framework/signapk.jar ]; then
             mka signapk
         fi
-
+        mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_BLACKHAWK
         create_blackhawk_kernel_zip
         ;;
 
@@ -209,7 +207,8 @@ case "$EXTRABUILD" in
         rm -rf ${ANDROID_PRODUCT_OUT}/ramdisk*
 
         time mka recoveryimage
-        cp ${ANDROID_PRODUCT_OUT}/recovery.img $DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY/recovery-CWM-${RECOVERY_VERSION}-$(date +%Y%m%d)-${DEVICE}.img
+        mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY
+        cp ${ANDROID_PRODUCT_OUT}/recovery.img $DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY/recovery-CWM-${REPO_BRANCH}-$(date +%Y%m%d)-${DEVICE}.img
         ;;
 
     blackhawk-recovery)
@@ -228,7 +227,7 @@ case "$EXTRABUILD" in
         if [ ! -e ${ANDROID_PRODUCT_OUT}/obj/EXECUTABLES/updater_intermediates/updater ]; then
             mka updater
         fi
-
+        mkdir -p $DOWNLOAD_WIMPNETHER_NET_DEVICE_BLACKHAWK
         create_blackhawk_recovery_zip
         ;;
 
