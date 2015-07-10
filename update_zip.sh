@@ -205,10 +205,10 @@ case "$EXTRABUILD" in
         rm -rf ${ANDROID_PRODUCT_OUT}/obj/KERNEL_OBJ
         rm ${ANDROID_PRODUCT_OUT}/kernel
         rm ${ANDROID_PRODUCT_OUT}/recovery.img
-        rm ${ANDROID_PRODUCT_OUT}/recovery
+        rm -rf ${ANDROID_PRODUCT_OUT}/recovery
         rm -rf ${ANDROID_PRODUCT_OUT}/ramdisk*
 
-        time mka ${ANDROID_PRODUCT_OUT}/recovery.img
+        time mka recoveryimage
         cp recovery.img $DOWNLOAD_WIMPNETHER_NET_DEVICE_RECOVERY/recovery-CWM-${RECOVERY_VERSION}-$(date +%Y%m%d)-${DEVICE}.img
         ;;
 
@@ -218,7 +218,7 @@ case "$EXTRABUILD" in
         rm -rf ${ANDROID_PRODUCT_OUT}/obj/KERNEL_OBJ
         rm ${ANDROID_PRODUCT_OUT}/kernel
         rm ${ANDROID_PRODUCT_OUT}/recovery.img
-        rm ${ANDROID_PRODUCT_OUT}/recovery
+        rm -rf ${ANDROID_PRODUCT_OUT}/recovery
         rm -rf ${ANDROID_PRODUCT_OUT}/ramdisk*
 
         export RECOVERY_VARIANT=philz
