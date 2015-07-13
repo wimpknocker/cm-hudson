@@ -114,7 +114,7 @@ create_blackhawk_kernel_zip()
 create_blackhawk_recovery_zip()
 {
    echo -e "${txtgrn}Creating blackhawk recovery zip...${txtrst}"
-    if [ -e ${ANDROID_PRODUCT_OUT}/blackhawk-recovery.img ]; then
+    if [ -e ${ANDROID_PRODUCT_OUT}/recovery.img ]; then
         echo -e "${txtgrn}recoveryimage found...${txtrst}"
         if [ -e $WORKSPACE/cm-hudson/target/updater-scripts/${DEVICE}/blackhawk_recovery_updater-script ]; then
 
@@ -126,7 +126,7 @@ create_blackhawk_recovery_zip()
             mkdir -p recovery_zip/META-INF/com/google/android
 
             echo "Copying recovery image..."
-              cp blackhawk-recovery.img recovery_zip/blackhawk-recovery.img
+              cp recovery.img recovery_zip/blackhawk-recovery.img
 
             echo "Copying updater-script..."
               cat $WORKSPACE/cm-hudson/target/updater-scripts/$DEVICE/blackhawk_recovery_updater-script > recovery_zip/META-INF/com/google/android/updater-script
@@ -223,7 +223,7 @@ case "$EXTRABUILD" in
         export RECOVERY_VARIANT=philz
 
         mka recoveryimage
-        mv ${ANDROID_PRODUCT_OUT}/recovery.img ${ANDROID_PRODUCT_OUT}/blackhawk-recovery.img
+
         if [ ! -e ${ANDROID_PRODUCT_OUT}/obj/EXECUTABLES/updater_intermediates/updater ]; then
             mka updater
         fi
