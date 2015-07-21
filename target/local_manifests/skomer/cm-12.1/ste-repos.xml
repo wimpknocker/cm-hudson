@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remove-project name="CyanogenMod/android_bionic" />
+  <remove-project name="CyanogenMod/android_build" />
+  <remove-project name="CyanogenMod/android_frameworks_av" />
+  <remove-project name="CyanogenMod/android_frameworks_base" />
+  <remove-project name="CyanogenMod/android_frameworks_native" />
+  <remove-project name="CyanogenMod/android_hardware_libhardware" />
+  <remove-project name="CyanogenMod/android_hardware_libhardware_legacy" />
+  <remove-project name="CyanogenMod/android_system_core" />
+
+  <project path="bionic" name="XperiaSTE/android_bionic" />
+  <project path="build" name="XperiaSTE/android_build" > <copyfile src="core/root.mk" dest="Makefile" /> </project>
+  <project path="frameworks/av" name="XperiaSTE/android_frameworks_av" />
+  <project path="frameworks/base" name="XperiaSTE/android_frameworks_base" />
+  <project path="frameworks/native" name="XperiaSTE/android_frameworks_native" />
+  <project path="hardware/libhardware" name="XperiaSTE/android_hardware_libhardware" />
+  <project path="hardware/libhardware_legacy" name="XperiaSTE/android_hardware_libhardware_legacy" />
+  <project path="system/core" name="XperiaSTE/android_system_core" />
+</manifest>
