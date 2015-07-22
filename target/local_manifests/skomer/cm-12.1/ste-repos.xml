@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!-- <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remove-project name="CyanogenMod/android_bionic" />
   <remove-project name="CyanogenMod/android_build" />
@@ -18,3 +18,4 @@
   <project path="hardware/libhardware_legacy" name="XperiaSTE/android_hardware_libhardware_legacy" />
   <project path="system/core" name="XperiaSTE/android_system_core" />
 </manifest>
+-->
