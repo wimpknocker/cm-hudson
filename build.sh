@@ -231,21 +231,15 @@ fi
 if [ "$REPO_SYNC" = "true" ]; then
 
 # Clean patches
-if [ "$PATCHES_CLEAN" = "true" ]
-then
-    $WORKSPACE/cm-hudson/patchclean.sh
-fi
-
 if [ "$PATCHES_CLEAN" = "full" ]
 then
-    $WORKSPACE/cm-hudson/patchclean.sh
     rm -rf $WORKSPACE/patches/$REPO_BRANCH/$DEVICE
 fi
 
 mkdir -p .repo/local_manifests
 rm -f .repo/local_manifest.xml
 
-# clean local_manifests, helping switch device
+# clean local_manifests
 rm .repo/local_manifests/*
 
 # include device local_manifests
@@ -253,6 +247,10 @@ cp $WORKSPACE/cm-hudson/target/local_manifests/$DEVICE/$REPO_BRANCH/*.xml .repo/
 
 echo Core Manifest:
 cat .repo/manifest.xml
+
+#Clean patches
+echo Clean Patches
+repo forall -vc "git reset --hard";
 
 echo Syncing...
 # if sync fails, sync again, if sync fails then exit
