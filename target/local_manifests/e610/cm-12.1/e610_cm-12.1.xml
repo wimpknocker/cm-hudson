@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
- <remove-project name="CyanogenMod/android_build" />
- <remove-project name="CyanogenMod/android_frameworks_av" />
-<!-- display-caf -->
-   <project name="msm7x27a/android_hardware_qcom_display" path="hardware/qcom/display-caf/msm7x27a" revision="cm-12.1-caf-msm7x27a" />
-<!-- media-caf -->
-   <project name="msm7x27a/android_hardware_qcom_media" path="hardware/qcom/media-caf/msm7x27a" revision="cm-12.1-caf-msm7x27a" />
-<!-- Device Tree, Kernel and Vendor -->
-<project path="device/lge/msm7x27a-common" name="optimus-lge/android_device_lge_msm7x27a-common" revision="cm-12.1" remote="github"/>
-<project path="device/lge/e610" name="optimus-lge/android_device_lge_e610" revision="cm-12.1" remote="github"/>
-<project path="kernel/lge/msm7x27a-common" name="optimus-lge/lge-kernel-lproj" revision="cm-12.1-exp" />
-<project path="vendor/lge" name="optimus-lge/proprietary_vendor_lge" revision="cm-12.1" remote="github"/>
-<project path="prebuilt/linux-x86/toolchain/arm-eabi-5.1" name="TeamBliss-LP/arm-eabi-5.1" remote="github" revision="master" />
-<project path="build" name="optimus-lge/android_build" groups="pdk,tradefed" >
-    <copyfile src="core/root.mk" dest="Makefile" />
-  </project>
-  <project path="frameworks/av" name="AOSPA-LGE/android_frameworks_av" revision="cm-12.1"/>
+    <remove-project name="CyanogenMod/android_hardware_qcom_display-caf" />
+
+    <project path="hardware/qcom/display-caf" name="TeamHackLG/android_hardware_qcom_display-caf" revision="cm-11.0"/>
+    <project path="device/lge/msm7x27a-common" name="TeamHackLG/android_device_lge_msm7x27a-common" revision="cm-11.0" />
+    <project path="device/lge/e610" name="TeamHackLG/android_device_lge_e610" revision="cm-11.0" />
+    <project path="device/lge/p700" name="TeamHackLG/android_device_lge_p700" revision="cm-11.0" />
+    <project path="kernel/lge/msm7x27a-common" name="TeamHackLG/lge-kernel-lproj" revision="android-msm-3.4-kk" />
+    <project path="vendor/lge" name="TeamHackLG/proprietary_vendor_lge" revision="cm-11.0" remote="github"/>
+ 
 </manifest>
