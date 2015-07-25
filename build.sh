@@ -288,6 +288,9 @@ then
     $WORKSPACE/cm-hudson/patcher.sh
 fi
 
+#no block ota, need patch
+export BLOCK_BASED_OTA="$BLOCK_BASED_OTA" #none/false
+
 # Update-client
 $WORKSPACE/cm-hudson/update_client.sh
 
