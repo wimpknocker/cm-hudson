@@ -4,5 +4,5 @@
 <!--      <project name="wimpknocker/android_kernel_samsung_skomer" path="kernel/samsung/skomer" revision="jellybean-v2" /> -->
       <project name="wimpknocker/android_vendor_samsung_skomer" path="vendor/samsung/skomer" revision="cm-11.0" />
 
-      <project name="VanirAOSP/kernel_samsung_skomer" patch="kernel/samsung/skomer" revision="L5" />
+      <project name="VanirAOSP/kernel_samsung_skomer" patch="kernel/samsung/skomer" revision="L5" remote="github" />
   </manifest>
