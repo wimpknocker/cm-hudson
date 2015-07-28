@@ -43,6 +43,11 @@ then
   REPO_SYNC=true
 fi
 
+if [ -z "$PATCHER_CLEAN" ]
+then
+  PATCHER_CLEAN=false
+fi
+
 if [ ! -z "$GERRIT_PROJECT" ]
 then
   export RELEASE_TYPE=CM_EXPERIMENTAL
@@ -107,10 +112,6 @@ fi
 if [ -z "$SYNC_PROTO" ]
 then
   SYNC_PROTO=git
-fi
-if [ -z "$PATCHER_CLEAN" ]
-then
-  PATCHER_CLEAN=false
 fi
 
 if [ -z "$PATCHER_SH" ]
@@ -231,8 +232,7 @@ fi
 if [ "$REPO_SYNC" = "true" ]; then
 
 # Clean patches
-if [ "$PATCHES_CLEAN" = "full" ]
-then
+if [ "$PATCHES_CLEAN" = "full" ]; then
     rm -rf $WORKSPACE/patches/$REPO_BRANCH/$DEVICE
 fi
 
@@ -248,9 +248,11 @@ cp $WORKSPACE/cm-hudson/target/local_manifests/$DEVICE/$REPO_BRANCH/*.xml .repo/
 echo Core Manifest:
 cat .repo/manifest.xml
 
+if [ "$PATCHER_CLEAN" = "true" ]; then
 #Clean patches
 echo Clean Patches
 repo forall -vc "git reset --hard";
+fi
 
 echo Syncing...
 # if sync fails, sync again, if sync fails then exit
