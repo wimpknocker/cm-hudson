@@ -200,9 +200,9 @@ fi
 
 if [[ "$SYNC_PROTO" == "ssh" ]]
 then
-  repo init -u ssh://git@github.com/CyanogenMod/android.git -b $CORE_BRANCH $MANIFEST
+  repo init -u ssh://git@github.com/wimpknocker/android_manifests.git -b $CORE_BRANCH $MANIFEST
 else
-  repo init -u $SYNC_PROTO://github.com/CyanogenMod/android.git -b $CORE_BRANCH $MANIFEST
+  repo init -u $SYNC_PROTO://github.com/wimpknocker/android_manifests.git -b $CORE_BRANCH $MANIFEST
 fi
 check_result "repo init failed."
 
@@ -242,8 +242,10 @@ rm -f .repo/local_manifest.xml
 # clean local_manifests
 rm .repo/local_manifests/*
 
+if [ "$LOCAL_MANIFESTS" = "true" ]; then
 # include device local_manifests
 cp $WORKSPACE/cm-hudson/target/local_manifests/$DEVICE/$REPO_BRANCH/*.xml .repo/local_manifests/
+fi
 
 echo Core Manifest:
 cat .repo/manifest.xml
